@@ -346,6 +346,43 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 .adaptive-note i{width:8px;height:8px;border-radius:50%;background:var(--pink);margin-top:4px;flex:0 0 auto}
 .adaptive-note p{font-size:9px;line-height:1.6;color:#736c79;margin:0}
 
+
+/* Question Engine */
+.practice-engine-toolbar{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  background:linear-gradient(120deg,#fff,#faf8ff);border:1px solid var(--line);
+  border-radius:17px;padding:15px 18px;margin-bottom:10px
+}
+.exam-format-summary{display:flex;flex-direction:column;gap:3px}
+.exam-format-summary strong{font-size:12px;color:#41374e}
+.exam-format-summary small{font-size:8px;color:#8c8497}
+.practice-mode-tabs{display:flex;gap:5px;background:#f2eff7;border-radius:12px;padding:4px}
+.practice-mode{border:0;background:transparent;border-radius:9px;padding:9px 12px;font-size:9px;font-weight:700;color:#766d83;cursor:pointer}
+.practice-mode.active{background:#fff;color:var(--purple);box-shadow:0 4px 12px rgba(61,34,104,.08)}
+.practice-bank-filters{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-bottom:12px}
+.practice-bank-filters label{display:flex;flex-direction:column;gap:5px;font-size:8px;font-weight:700;color:#81798b}
+.practice-bank-filters select{border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px 11px;font:600 9px Poppins,Arial,sans-serif;color:#544b60}
+.practice-bank-count{min-width:100px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:8px 12px;display:flex;flex-direction:column;justify-content:center}
+.practice-bank-count span{font-size:7px;color:#9891a1;font-weight:700}.practice-bank-count strong{font-size:18px;color:var(--purple)}
+.practice-vignette{background:#fff;border:1px solid #ded7eb;border-radius:17px;padding:20px;margin-bottom:12px;box-shadow:0 5px 18px rgba(72,44,119,.03)}
+.practice-vignette-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.practice-vignette-head h3{font-size:16px;margin:4px 0 0}
+.practice-vignette>p{font-size:10px;line-height:1.8;color:#51495c;margin:14px 0 0}
+.set-progress{padding:7px 10px;border-radius:999px;background:var(--purple-soft);color:var(--purple);font-size:8px;font-weight:800;white-space:nowrap}
+.practice-exhibits{display:grid;gap:10px;margin-top:14px}
+.practice-exhibit{overflow:auto;border:1px solid #eee9f4;border-radius:12px}
+.practice-exhibit strong{display:block;padding:9px 11px;font-size:9px;background:#faf8fc}
+.practice-exhibit table{width:100%;border-collapse:collapse;font-size:8px}
+.practice-exhibit th,.practice-exhibit td{padding:8px 10px;border-top:1px solid #f0ecf4;text-align:left;white-space:nowrap}
+.practice-exhibit th{color:#756d80;background:#fdfcff}
+.question-source-chip{display:inline-block;margin-left:7px;padding:4px 7px;border-radius:999px;background:#f1eef7;color:#766a84;font-size:7px;font-weight:800;vertical-align:middle}
+@media(max-width:780px){
+  .practice-engine-toolbar{align-items:flex-start;flex-direction:column}
+  .practice-mode-tabs{width:100%;overflow:auto}
+  .practice-bank-filters{grid-template-columns:1fr 1fr}
+  .practice-bank-count{grid-column:1/-1}
+}
+
 /* mastery */
 .mastery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .mastery-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
@@ -890,6 +927,45 @@ button:focus-visible,input:focus-visible,select:focus-visible{
           </div>
         </div>
 
+        <div class="practice-engine-toolbar">
+          <div class="exam-format-summary">
+            <span class="eyebrow">2026 EXAM FORMAT</span>
+            <strong id="practiceFormatTitle">Loading format…</strong>
+            <small id="practiceFormatMeta"></small>
+          </div>
+          <div class="practice-mode-tabs">
+            <button class="practice-mode active" data-practice-mode="adaptive" type="button">Adaptive</button>
+            <button class="practice-mode" data-practice-mode="exam_style" type="button">Exam Style</button>
+            <button class="practice-mode" data-practice-mode="quick" type="button">Quick Practice</button>
+          </div>
+        </div>
+
+        <div class="practice-bank-filters">
+          <label>Topic
+            <select id="practiceTopicFilter"><option value="all">All topics</option></select>
+          </label>
+          <label>Question source
+            <select id="practiceSourceFilter">
+              <option value="all">All sources</option>
+              <option value="ai_generated">AI Generated</option>
+              <option value="admin">Provided by Admin</option>
+              <option value="original">Original</option>
+            </select>
+          </label>
+          <div class="practice-bank-count">
+            <span>Available</span><strong id="practiceAvailableCount">0</strong>
+          </div>
+        </div>
+
+        <div id="practiceVignette" class="practice-vignette hidden">
+          <div class="practice-vignette-head">
+            <div><span class="eyebrow">VIGNETTE</span><h3 id="practiceVignetteTitle"></h3></div>
+            <span id="practiceSetProgress" class="set-progress"></span>
+          </div>
+          <p id="practiceVignetteText"></p>
+          <div id="practiceExhibits" class="practice-exhibits"></div>
+        </div>
+
         <div class="practice-grid">
           <article class="panel practice-card">
             <span id="practiceTopic" class="topic-chip">TOPIC</span>
@@ -1139,7 +1215,14 @@ let currentPlan = [];
 let currentAvailability = [];
 let currentMastery = [];
 let practiceQuestions = [];
+let allPracticeQuestions = [];
+let practiceQuestionSets = [];
 let currentPracticeQuestion = null;
+let currentPracticeSet = null;
+let practiceSetCursor = 0;
+let practiceMode = 'adaptive';
+let practiceSourceFilter = 'all';
+let practiceTopicFilter = 'all';
 let practiceStartedAt = null;
 let practiceSupportUsed = false;
 let practiceAnswered = 0;
@@ -1572,23 +1655,116 @@ function renderLearn() {
 }
 
 
+function examFormatCode() {
+  if (!currentEnrollment) return 'standalone';
+  if (currentEnrollment.certification === 'CFA') {
+    if (currentEnrollment.level === 'I') return 'cfa_l1_single';
+    if (currentEnrollment.level === 'II') return 'cfa_l2_vignette';
+    return 'cfa_l3_item_set';
+  }
+  return currentEnrollment.level === 'I' ? 'frm_p1_mcq' : 'frm_p2_mcq';
+}
+
+function renderPracticeFormatSummary() {
+  const cert = currentEnrollment?.certification;
+  const level = currentEnrollment?.level;
+  let title = 'Exam-style practice';
+  let meta = '';
+  if (cert === 'CFA' && level === 'I') {
+    title = 'CFA Level I · Standalone multiple choice';
+    meta = '180 questions · 2 × 135 min sessions · 3 choices per item';
+  } else if (cert === 'CFA' && level === 'II') {
+    title = 'CFA Level II · Vignette item sets';
+    meta = '22 item sets · 4 questions per vignette · 3 choices per item';
+  } else if (cert === 'CFA' && level === 'III') {
+    title = 'CFA Level III · Item sets + constructed response';
+    meta = '11 item sets + 11 essay sets · vignette-supported';
+  } else if (cert === 'FRM' && level === 'I') {
+    title = 'FRM Part I · Multiple choice';
+    meta = '100 questions · 4 hours · computer-based';
+  } else if (cert === 'FRM' && level === 'II') {
+    title = 'FRM Part II · Multiple choice';
+    meta = '80 questions · 4 hours · computer-based';
+  }
+  el('practiceFormatTitle').textContent = title;
+  el('practiceFormatMeta').textContent = meta;
+}
+
+function sourceMatches(q) {
+  if (practiceSourceFilter === 'all') return true;
+  if (practiceSourceFilter === 'admin') return ['admin_uploaded','provided','licensed','official_public_sample'].includes(q.source_type);
+  return q.source_type === practiceSourceFilter;
+}
+
+function formatMatchesMode(q) {
+  if (practiceMode !== 'exam_style') return true;
+  if (currentEnrollment?.certification === 'CFA' && currentEnrollment?.level === 'III') {
+    return ['cfa_l3_item_set','cfa_l3_constructed_response'].includes(q.exam_format);
+  }
+  const expected = examFormatCode();
+  return q.exam_format === expected;
+}
+
+function refreshPracticePool() {
+  practiceQuestions = allPracticeQuestions.filter(q =>
+    sourceMatches(q) &&
+    formatMatchesMode(q) &&
+    (practiceTopicFilter === 'all' || q.topic_id === practiceTopicFilter)
+  );
+  el('practiceAvailableCount').textContent = practiceQuestions.length;
+}
+
 async function loadPracticeQuestions() {
   if (!currentEnrollment) return;
-  const { data, error } = await supabase
-    .from('questions')
-    .select('*,topics(name,certification,level)')
-    .eq('topics.certification', currentEnrollment.certification)
-    .eq('topics.level', currentEnrollment.level);
-  if (error) {
-    toast(error.message);
+  renderPracticeFormatSummary();
+
+  const [questionsRes, setsRes] = await Promise.all([
+    supabase
+      .from('questions')
+      .select('*,topics(name,certification,level,node_type,parent_id)')
+      .eq('topics.certification', currentEnrollment.certification)
+      .eq('topics.level', currentEnrollment.level),
+    supabase
+      .from('question_sets')
+      .select('*')
+      .eq('certification', currentEnrollment.certification)
+      .eq('level', currentEnrollment.level)
+      .eq('curriculum_year', 2026)
+  ]);
+
+  if (questionsRes.error) {
+    toast(questionsRes.error.message);
     return;
   }
-  practiceQuestions = (data || []).filter(q => q.topics);
+  if (setsRes.error) {
+    toast(setsRes.error.message);
+    return;
+  }
+
+  allPracticeQuestions = (questionsRes.data || []).filter(q => q.topics);
+  practiceQuestionSets = setsRes.data || [];
+
+  const topicMap = new Map();
+  allPracticeQuestions.forEach(q => {
+    if (q.topic_id && q.topics?.name) topicMap.set(q.topic_id, q.topics.name);
+  });
+  el('practiceTopicFilter').innerHTML =
+    '<option value="all">All topics</option>' +
+    [...topicMap.entries()]
+      .sort((a,b)=>a[1].localeCompare(b[1]))
+      .map(([id,name]) => '<option value="' + id + '">' + escapeHtml(name) + '</option>')
+      .join('');
+
+  refreshPracticePool();
   if (!practiceQuestions.length) {
     currentPracticeQuestion = null;
-    el('practiceQuestion').textContent = 'No practice questions are loaded for this track yet.';
+    currentPracticeSet = null;
+    el('practiceQuestion').textContent = practiceMode === 'exam_style'
+      ? 'No published exam-style questions are loaded for this track yet.'
+      : 'No practice questions match these filters yet.';
     el('practiceChoices').innerHTML = '';
-    el('practiceTopic').textContent = 'PRACTICE';
+    el('practiceTopic').textContent = 'QUESTION BANK';
+    el('practiceVignette').classList.add('hidden');
     return;
   }
   chooseNextPracticeQuestion();
@@ -1599,22 +1775,94 @@ function masteryForTopic(topicId) {
 }
 
 function chooseNextPracticeQuestion() {
-  if (!practiceQuestions.length) return;
-  const sorted = [...practiceQuestions].sort((a,b) => {
-    const ma = masteryForTopic(a.topic_id)?.mastery ?? 50;
-    const mb = masteryForTopic(b.topic_id)?.mastery ?? 50;
-    return ma - mb;
-  });
-  currentPracticeQuestion = sorted[Math.floor(Math.random() * Math.min(2, sorted.length))];
+  refreshPracticePool();
+  if (!practiceQuestions.length) {
+    currentPracticeQuestion = null;
+    currentPracticeSet = null;
+    el('practiceQuestion').textContent = 'No questions match the selected practice mode and filters.';
+    el('practiceChoices').innerHTML = '';
+    el('practiceVignette').classList.add('hidden');
+    return;
+  }
+
+  if (practiceMode === 'exam_style') {
+    const setCandidates = practiceQuestionSets
+      .filter(s => practiceQuestions.some(q => q.question_set_id === s.id))
+      .sort((a,b) => {
+        const ma = masteryForTopic(a.topic_id)?.mastery ?? 50;
+        const mb = masteryForTopic(b.topic_id)?.mastery ?? 50;
+        return ma - mb;
+      });
+
+    if (setCandidates.length) {
+      if (!currentPracticeSet || !setCandidates.some(s => s.id === currentPracticeSet.id) || practiceSetCursor >= practiceQuestions.filter(q=>q.question_set_id===currentPracticeSet.id).length) {
+        currentPracticeSet = setCandidates[0];
+        practiceSetCursor = 0;
+      }
+      const setQuestions = practiceQuestions
+        .filter(q => q.question_set_id === currentPracticeSet.id)
+        .sort((a,b) => Number(a.position_in_set||0) - Number(b.position_in_set||0));
+      currentPracticeQuestion = setQuestions[Math.min(practiceSetCursor, setQuestions.length-1)];
+      practiceSetCursor += 1;
+    } else {
+      const eligible = practiceQuestions;
+      currentPracticeSet = null;
+      currentPracticeQuestion = eligible[Math.floor(Math.random()*eligible.length)];
+    }
+  } else if (practiceMode === 'quick') {
+    currentPracticeSet = null;
+    currentPracticeQuestion = practiceQuestions[Math.floor(Math.random() * practiceQuestions.length)];
+  } else {
+    currentPracticeSet = null;
+    const sorted = [...practiceQuestions].sort((a,b) => {
+      const ma = masteryForTopic(a.topic_id)?.mastery ?? 50;
+      const mb = masteryForTopic(b.topic_id)?.mastery ?? 50;
+      return ma - mb;
+    });
+    currentPracticeQuestion = sorted[Math.floor(Math.random() * Math.min(2, sorted.length))];
+  }
+
   practiceStartedAt = Date.now();
   practiceSupportUsed = false;
   renderPracticeQuestion();
 }
 
+function renderPracticeVignette(q) {
+  const set = q?.question_set_id ? practiceQuestionSets.find(s => s.id === q.question_set_id) : null;
+  if (!set) {
+    el('practiceVignette').classList.add('hidden');
+    return;
+  }
+  el('practiceVignette').classList.remove('hidden');
+  el('practiceVignetteTitle').textContent = set.title || 'Exam-style item set';
+  el('practiceVignetteText').textContent = set.vignette || '';
+  const setQuestions = practiceQuestions.filter(x => x.question_set_id === set.id);
+  el('practiceSetProgress').textContent = 'Question ' + (q.position_in_set || 1) + ' of ' + setQuestions.length;
+  const exhibits = Array.isArray(set.exhibits) ? set.exhibits : [];
+  el('practiceExhibits').innerHTML = exhibits.map(ex => {
+    const cols = Array.isArray(ex.columns) ? ex.columns : [];
+    const rows = Array.isArray(ex.rows) ? ex.rows : [];
+    return '<div class="practice-exhibit"><strong>' + escapeHtml(ex.name || 'Exhibit') + '</strong>' +
+      '<table><thead><tr>' + cols.map(x=>'<th>'+escapeHtml(x)+'</th>').join('') + '</tr></thead>' +
+      '<tbody>' + rows.map(row=>'<tr>'+row.map(cell=>'<td>'+escapeHtml(cell)+'</td>').join('')+'</tr>').join('') + '</tbody></table></div>';
+  }).join('');
+}
+
+function questionSourceLabel(source) {
+  if (source === 'ai_generated') return 'AI GENERATED';
+  if (['admin_uploaded','provided'].includes(source)) return 'ADMIN PROVIDED';
+  if (source === 'licensed') return 'LICENSED';
+  if (source === 'official_public_sample') return 'OFFICIAL PUBLIC SAMPLE';
+  return 'ORIGINAL';
+}
+
 function renderPracticeQuestion() {
   const q = currentPracticeQuestion;
   if (!q) return;
-  el('practiceTopic').textContent = `${q.topics?.name || 'Topic'} · ${Math.round(Number(q.difficulty||0.5)*100)} difficulty`;
+  renderPracticeVignette(q);
+  el('practiceTopic').innerHTML = escapeHtml(q.topics?.name || 'Topic') +
+    ' · ' + Math.round(Number(q.difficulty||0.5)*100) + '% difficulty' +
+    '<span class="question-source-chip">' + questionSourceLabel(q.source_type) + '</span>';
   el('practiceQuestion').textContent = q.stem;
   el('practiceChoices').innerHTML = (q.choices || []).map((choice,i) =>
     `<button class="choice-btn" data-choice="${i}" type="button">${String.fromCharCode(65+i)}. ${choice}</button>`
@@ -1713,6 +1961,32 @@ el('supportBtn').addEventListener('click', () => {
 });
 
 el('nextQuestionBtn').addEventListener('click', chooseNextPracticeQuestion);
+
+document.querySelectorAll('[data-practice-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    practiceMode = btn.dataset.practiceMode || 'adaptive';
+    currentPracticeSet = null;
+    practiceSetCursor = 0;
+    document.querySelectorAll('[data-practice-mode]').forEach(x => x.classList.toggle('active',x===btn));
+    refreshPracticePool();
+    chooseNextPracticeQuestion();
+  });
+});
+
+el('practiceTopicFilter').addEventListener('change', e => {
+  practiceTopicFilter = e.target.value || 'all';
+  currentPracticeSet = null;
+  practiceSetCursor = 0;
+  chooseNextPracticeQuestion();
+});
+
+el('practiceSourceFilter').addEventListener('change', e => {
+  practiceSourceFilter = e.target.value || 'all';
+  currentPracticeSet = null;
+  practiceSetCursor = 0;
+  chooseNextPracticeQuestion();
+});
+
 
 function renderMastery() {
   if (!el('masteryGrid')) return;
