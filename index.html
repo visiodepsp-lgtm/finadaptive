@@ -272,6 +272,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 .metric-card span{font-size:8px;color:#8a8493;font-weight:800;letter-spacing:.08em}
 .metric-card strong{font-size:25px;margin:6px 0 2px;letter-spacing:-.04em}
 .metric-card small{font-size:9px;color:#9a96a1}
+.countdown-card strong{color:var(--purple);font-variant-numeric:tabular-nums}
+.countdown-card small{font-weight:600}
 .content-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px;margin-top:14px}
 .panel{
   background:white;border:1px solid var(--line);border-radius:17px;padding:21px;
@@ -763,8 +765,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{
           <article class="metric-card pink-card">
             <span>AVAILABLE</span><strong id="metricHours">0h</strong><small>Weekly capacity</small>
           </article>
-          <article class="metric-card neutral-card">
-            <span>TOPICS</span><strong id="metricTopics">0</strong><small>Current curriculum</small>
+          <article class="metric-card neutral-card countdown-card">
+            <span>EXAM COUNTDOWN</span><strong id="metricDaysToExam">—</strong><small id="metricExamDate">Target date</small>
           </article>
         </div>
 
@@ -1301,8 +1303,18 @@ function renderDashboard() {
 
   const exam = new Date(currentEnrollment.exam_date+'T00:00:00');
   const now = new Date(); now.setHours(0,0,0,0);
-  const days = Math.max(0, Math.ceil((exam-now)/86400000));
-  el('daysToExam').textContent = `${days} days to exam`;
+  const rawDays = Math.ceil((exam-now)/86400000);
+  const days = Math.max(0, rawDays);
+  const examDateLabel = exam.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  el('daysToExam').textContent =
+    rawDays > 1 ? `${rawDays} days to exam` :
+    rawDays === 1 ? '1 day to exam' :
+    rawDays === 0 ? 'Exam day' : 'Exam date passed';
+  el('metricDaysToExam').textContent = rawDays >= 0 ? days : '0';
+  el('metricExamDate').textContent =
+    rawDays > 0 ? `Until ${examDateLabel}` :
+    rawDays === 0 ? `Today · ${examDateLabel}` :
+    `Target was ${examDateLabel}`;
 
   const pending = currentPlan.find(x => x.status === 'pending');
   if (pending) {
@@ -1326,7 +1338,7 @@ function renderDashboard() {
   el('metricCompleted').textContent = weekItems.filter(x=>x.status==='completed').length;
   const weeklyMinutes = currentAvailability.reduce((a,x)=>a+x.morning_minutes+x.evening_minutes,0);
   el('metricHours').textContent = `${(weeklyMinutes/60).toFixed(1)}h`;
-  el('metricTopics').textContent = currentTopics.length;
+  // Countdown metric is rendered from the saved exam date.
 
   const todayItems = currentPlan.filter(x=>x.scheduled_date===today);
   el('todayPlan').innerHTML = todayItems.length ? todayItems.map(planRow).join('') : `<div class="empty">No study block scheduled for today.</div>`;
