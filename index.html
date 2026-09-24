@@ -1,0 +1,1738 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="theme-color" content="#5b2bbd"/>
+  <title>FinAdaptive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+
+:root{
+  --purple:#5b2bbd;
+  --purple-dark:#3e1e84;
+  --purple-soft:#f2edff;
+  --cyan:#23cbd0;
+  --cyan-soft:#e9fbfc;
+  --pink:#ee4aa5;
+  --pink-soft:#fff0f8;
+  --ink:#1f2430;
+  --muted:#747b88;
+  --line:#e8e8ef;
+  --bg:#fafafe;
+  --white:#ffffff;
+  --success:#17976c;
+  --danger:#cf5564;
+  --shadow:0 12px 34px rgba(63,37,112,.08);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font-family:"Poppins","Avenir Next","Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select{font:inherit}
+button{transition:.18s ease}
+button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:3px solid rgba(35,203,208,.24);
+  outline-offset:2px;
+}
+.hidden{display:none!important}
+
+/* shared */
+.eyebrow{
+  display:block;
+  font-size:10px;
+  line-height:1.3;
+  font-weight:800;
+  letter-spacing:.14em;
+  color:var(--purple);
+}
+.light-eyebrow{color:#d9ccff}
+.brand-lockup{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  width:43px;height:43px;border-radius:14px;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--purple),#7c48db);
+  color:#fff;font-size:13px;font-weight:800;letter-spacing:-.04em;
+  box-shadow:0 8px 20px rgba(91,43,189,.23);
+}
+.brand-mark-light{background:#fff;color:var(--purple);box-shadow:none}
+.brand-lockup h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.04em}
+.brand-lockup p{margin:2px 0 0;font-size:10px;color:var(--muted)}
+.brand-lockup.small .brand-mark{width:38px;height:38px;border-radius:12px}
+.brand-lockup.small h1{font-size:15px}
+.center-view{
+  min-height:100vh;display:grid;place-items:center;align-content:center;gap:22px;background:#fff
+}
+.loader{
+  width:30px;height:30px;border:3px solid #eeeaf7;border-top-color:var(--purple);border-radius:50%;
+  animation:spin .8s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.primary-btn{
+  border:0;border-radius:13px;padding:13px 18px;
+  background:var(--purple);color:white;font-weight:700;font-size:12px;cursor:pointer;
+  box-shadow:0 7px 17px rgba(91,43,189,.16)
+}
+.primary-btn:hover{background:var(--purple-dark);transform:translateY(-1px)}
+.primary-btn:disabled,.white-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.primary-btn.large{width:100%;padding:15px 18px}
+.ghost-btn,.text-btn,.support-btn{
+  border:0;background:transparent;color:var(--purple);font-weight:700;font-size:11px;cursor:pointer
+}
+.ghost-btn{
+  border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:#fff
+}
+.message{padding:12px 14px;margin-top:15px;border-radius:12px;font-size:11px;background:#f6f5fa;color:#5d6470}
+.message.error{background:#fff1f3;color:#9e3f4c}
+.message.success{background:#edf9f5;color:#247256}
+.muted{font-size:11px;color:var(--muted);line-height:1.6}
+
+/* auth */
+.auth-shell{min-height:100vh;display:grid;grid-template-columns:1.08fr .92fr}
+.auth-copy{
+  position:relative;overflow:hidden;
+  min-height:100vh;padding:50px 56px;
+  background:
+    radial-gradient(circle at 92% 10%,rgba(35,203,208,.28),transparent 22%),
+    radial-gradient(circle at 10% 90%,rgba(238,74,165,.21),transparent 22%),
+    linear-gradient(150deg,#5223b3 0%,#6736c9 56%,#47208d 100%);
+  color:#fff;display:flex;flex-direction:column
+}
+.auth-copy:after{
+  content:"";position:absolute;width:300px;height:300px;border:1px solid rgba(255,255,255,.10);
+  border-radius:50%;right:-130px;bottom:70px
+}
+.auth-brand{position:relative;z-index:2}
+.auth-brand h1,.auth-brand p{color:#fff}
+.auth-hero{position:relative;z-index:2;max-width:660px;margin:auto 0}
+.auth-hero h2{
+  margin:12px 0 18px;font-size:48px;line-height:1.06;letter-spacing:-.045em;font-weight:800
+}
+.auth-hero>p{margin:0;max-width:570px;font-size:14px;line-height:1.8;color:#e7e1f5}
+.auth-points{display:grid;gap:12px;margin-top:34px;max-width:580px}
+.auth-points>div{
+  display:flex;align-items:center;gap:13px;padding:12px 0;border-top:1px solid rgba(255,255,255,.16)
+}
+.auth-points p{margin:0;display:flex;flex-direction:column;gap:2px}
+.auth-points strong{font-size:12px}.auth-points small{color:#d9d1ed;font-size:10px}
+.point-orb{width:12px;height:12px;border-radius:50%;flex:0 0 auto}
+.point-orb.cyan{background:var(--cyan)}.point-orb.pink{background:var(--pink)}.point-orb.purple{background:#bd9cff}
+.auth-accent-row{display:flex;gap:6px;position:relative;z-index:2}
+.auth-accent-row span{height:7px;border-radius:10px;display:block}
+.auth-accent-row span:nth-child(1){width:58px;background:var(--cyan)}
+.auth-accent-row span:nth-child(2){width:34px;background:var(--pink)}
+.auth-accent-row span:nth-child(3){width:82px;background:#bba2fb}
+.auth-panel{background:#fff;display:grid;place-items:center;padding:45px}
+.auth-panel-inner{width:min(420px,100%)}
+.auth-heading h2{font-size:28px;letter-spacing:-.035em;margin:7px 0 7px}
+.auth-heading p{font-size:11px;color:var(--muted);line-height:1.6;margin:0 0 27px}
+.auth-tabs{display:flex;border-bottom:1px solid var(--line);margin-bottom:26px}
+.tab{
+  border:0;background:transparent;padding:12px 0;margin-right:25px;
+  color:#a2a5ad;font-size:11px;font-weight:700;border-bottom:3px solid transparent;cursor:pointer
+}
+.tab.active{color:var(--purple);border-color:var(--purple)}
+.auth-form{display:flex;flex-direction:column;gap:15px}
+.auth-form label,.field{font-size:10px;font-weight:700;color:#535a68}
+.auth-form input,.field input,.field select{
+  width:100%;margin-top:7px;padding:13px 14px;border-radius:12px;border:1px solid var(--line);
+  background:#fff;color:var(--ink);font-size:12px
+}
+.auth-form input:focus,.field input:focus,.field select:focus{
+  border-color:#baa5ed;box-shadow:0 0 0 4px rgba(91,43,189,.06)
+}
+.secure-note{
+  display:flex;gap:9px;align-items:center;margin-top:23px;padding-top:18px;border-top:1px solid var(--line);
+  color:#8a8f99;font-size:9px
+}
+.secure-note i,.status-row i{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 4px rgba(35,203,208,.12)}
+
+/* onboarding */
+.onboarding-shell{min-height:100vh;background:#f9f7fd}
+.simple-header{
+  height:78px;background:#fff;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 34px
+}
+.onboarding-layout{max-width:1180px;margin:36px auto;display:grid;grid-template-columns:.72fr 1.28fr;gap:20px;padding:0 20px}
+.setup-aside{
+  position:relative;overflow:hidden;border-radius:22px;padding:35px;background:linear-gradient(150deg,var(--purple),#713bd1);
+  color:#fff;min-height:560px;box-shadow:var(--shadow)
+}
+.setup-aside:after{
+  content:"";position:absolute;width:190px;height:190px;background:var(--cyan);opacity:.18;border-radius:50%;
+  right:-55px;bottom:-55px
+}
+.setup-aside h2{font-size:31px;line-height:1.15;letter-spacing:-.04em;margin:10px 0 14px}
+.setup-aside>p{font-size:11px;line-height:1.8;color:#e9e0fb}
+.setup-steps{margin-top:40px;display:grid;gap:8px}
+.setup-steps>div{
+  display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.11);
+  border-radius:14px;padding:13px
+}
+.setup-steps b{font-size:10px;color:#9eecef}
+.setup-steps span{display:flex;flex-direction:column}.setup-steps strong{font-size:11px}.setup-steps small{font-size:9px;color:#d9d1ef}
+.onboarding-card{
+  background:#fff;border:1px solid var(--line);border-radius:22px;padding:32px 36px;box-shadow:var(--shadow)
+}
+.progress-steps{display:flex;align-items:center;margin-bottom:10px}
+.progress-steps span{
+  width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#f0edf7;color:#a398b7;font-size:9px;font-weight:800
+}
+.progress-steps span.active{background:var(--purple);color:#fff}
+.progress-steps i{height:2px;flex:1;background:linear-gradient(90deg,var(--purple-soft),var(--cyan-soft))}
+.step{padding:28px 0;border-bottom:1px solid var(--line)}
+.step:last-of-type{border-bottom:0}
+.step h2{font-size:22px;letter-spacing:-.025em;margin:7px 0 18px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:block;margin-top:12px}
+.exam-language-note{
+  display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:14px 15px;
+  background:var(--purple-soft);border-radius:12px
+}
+.exam-language-note div{display:flex;flex-direction:column}.exam-language-note span{font-size:10px;font-weight:700}
+.exam-language-note small{font-size:9px;color:#827793}.exam-language-note strong{font-size:12px;color:var(--purple)}
+.availability-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:15px}
+.day-input{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center;background:#fff}
+.day-input span{display:block;font-size:9px;font-weight:800;color:#73697f;margin-bottom:7px}
+.day-input input{width:100%;border:0;background:#f6f4fa;border-radius:8px;padding:9px 5px;text-align:center;font-size:11px}
+
+/* dashboard */
+.dashboard-shell{min-height:100vh;display:grid;grid-template-columns:228px minmax(0,1fr)}
+.sidebar{
+  position:sticky;top:0;height:100vh;padding:25px 16px 18px;
+  background:linear-gradient(180deg,#5728b7 0%,#45208d 100%);color:#fff;display:flex;flex-direction:column
+}
+.sidebar-brand{padding:0 8px}.sidebar-brand h1,.sidebar-brand p{color:#fff}
+.sidebar-label{font-size:8px;letter-spacing:.14em;color:#cbbbea;font-weight:800;margin:35px 11px 8px}
+.sidebar-nav{display:flex;flex-direction:column;gap:5px}
+.nav-link{
+  border:0;background:transparent;color:#d8cdf0;padding:11px 12px;border-radius:11px;text-align:left;
+  font-weight:600;font-size:10px;cursor:pointer
+}
+.sidebar .nav-link:hover{background:rgba(255,255,255,.08);color:white}
+.sidebar .nav-link.active{background:#fff;color:var(--purple);box-shadow:0 8px 18px rgba(34,15,73,.17)}
+.coming-label{margin-top:28px}
+.future-feature{display:flex;justify-content:space-between;padding:9px 11px;color:#d1c3e9;font-size:9px}
+.future-feature small{color:#9fe8e9}
+.sidebar-spacer{flex:1}
+.sidebar-status{border-top:1px solid rgba(255,255,255,.13);padding:16px 7px 0}
+.status-row{display:flex;gap:10px;align-items:center}.status-row i{box-shadow:none}
+.status-row span{display:flex;flex-direction:column}.status-row strong{font-size:9px}.status-row small{font-size:8px;color:#cdbfe7}
+.sidebar-signout{width:100%;margin-top:13px;border:0;border-radius:10px;padding:10px;background:rgba(255,255,255,.08);color:#fff;font-size:9px;font-weight:700;cursor:pointer}
+.dashboard-main{min-width:0;padding:0 32px 50px}
+.dash-header{min-height:94px;display:flex;justify-content:space-between;align-items:center;gap:18px}
+.dash-header h2{margin:5px 0 0;font-size:25px;letter-spacing:-.035em}
+.header-meta{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:8px 11px;border-radius:999px;background:var(--purple);color:white;font-size:9px;font-weight:700}
+.pill.secondary{background:var(--cyan-soft);color:#147a80}
+.mobile-nav{display:none}
+
+/* overview */
+.hero-card{
+  position:relative;overflow:hidden;min-height:230px;border-radius:22px;padding:30px;
+  background:linear-gradient(120deg,#5b2bbd 0%,#6d39c8 64%,#5a2ab5 100%);
+  color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:25px;box-shadow:var(--shadow)
+}
+.hero-card>div:not(.hero-decoration){position:relative;z-index:2}
+.hero-card h3{font-size:29px;line-height:1.2;letter-spacing:-.04em;margin:9px 0 8px;max-width:700px}
+.hero-card p{font-size:11px;line-height:1.7;color:#e5dcf5;max-width:680px}
+.hero-eyebrow{color:#9ff1f2}
+.hero-meta{display:flex;gap:8px;margin-top:18px}
+.hero-meta span{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.12);font-size:9px;font-weight:600}
+.hero-actions{display:flex;flex-direction:column;gap:8px;min-width:145px}
+.white-btn,.outline-btn{
+  border-radius:12px;padding:11px 13px;font-size:10px;font-weight:700;cursor:pointer
+}
+.white-btn{border:0;background:white;color:var(--purple)}
+.outline-btn{border:1px solid rgba(255,255,255,.35);background:transparent;color:white}
+.white-btn:hover{transform:translateY(-1px)}
+.outline-btn:hover{background:rgba(255,255,255,.08)}
+.hero-decoration{position:absolute!important;right:-20px;top:-20px;width:220px;height:220px;opacity:.9;z-index:1!important}
+.hero-decoration i{position:absolute;border-radius:50%}
+.hero-decoration i:nth-child(1){width:170px;height:170px;background:rgba(35,203,208,.22);right:0;top:0}
+.hero-decoration i:nth-child(2){width:90px;height:90px;background:rgba(238,74,165,.25);right:92px;top:110px}
+.hero-decoration i:nth-child(3){width:45px;height:45px;background:rgba(255,255,255,.20);right:38px;top:85px}
+
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.metric-card{
+  position:relative;overflow:hidden;background:white;border:1px solid var(--line);border-radius:16px;padding:18px;
+  box-shadow:0 6px 20px rgba(79,55,123,.035)
+}
+.metric-card:before{content:"";position:absolute;left:0;top:0;width:5px;height:100%}
+.purple-card:before{background:var(--purple)}.cyan-card:before{background:var(--cyan)}.pink-card:before{background:var(--pink)}.neutral-card:before{background:#c3bed0}
+.metric-card span,.metric-card strong,.metric-card small{display:block}
+.metric-card span{font-size:8px;color:#8a8493;font-weight:800;letter-spacing:.08em}
+.metric-card strong{font-size:25px;margin:6px 0 2px;letter-spacing:-.04em}
+.metric-card small{font-size:9px;color:#9a96a1}
+.content-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:14px;margin-top:14px}
+.panel{
+  background:white;border:1px solid var(--line);border-radius:17px;padding:21px;
+  box-shadow:0 6px 20px rgba(79,55,123,.035)
+}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.panel-head h3{font-size:16px;margin:5px 0 0;letter-spacing:-.02em}
+.plan-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;
+  padding:14px 0;border-bottom:1px solid #f0edf4
+}
+.plan-row:last-child{border-bottom:0}
+.plan-row strong{display:block;font-size:11px}.plan-row small{font-size:9px;color:#96909f}
+.plan-row em{font-style:normal;font-size:9px;color:#77717f}
+.mini-complete{border:1px solid #dfd8ed;background:#fff;border-radius:9px;padding:7px 9px;font-size:9px;color:var(--purple);font-weight:700;cursor:pointer}
+.mini-complete:hover{background:var(--purple-soft)}
+.mini-complete.done{border-color:#bfe8d7;color:var(--success);background:#effaf5}
+.topic-preview-item{padding:12px 0;border-bottom:1px solid #f0edf4;font-size:10px;font-weight:600}
+.topic-preview-item:last-child{border-bottom:0}
+.empty{padding:24px 0;color:#96909f;font-size:10px}
+
+/* sections */
+.section-title{margin:12px 0 22px}
+.section-title h2{font-size:28px;letter-spacing:-.04em;margin:5px 0}
+.section-title p{font-size:10px;color:var(--muted);margin:0}
+.section-title-row{display:flex;justify-content:space-between;align-items:flex-end;gap:15px}
+.session-stat{text-align:right;background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px 13px}
+.session-stat span,.session-stat strong{display:block}.session-stat span{font-size:8px;color:#8e8995}.session-stat strong{font-size:18px;color:var(--purple)}
+
+/* plan */
+.full-plan{display:grid;gap:12px}
+.plan-day{background:#fff;border:1px solid var(--line);border-radius:16px;padding:19px 21px;box-shadow:0 5px 18px rgba(72,44,119,.03)}
+.plan-day-title{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.plan-day h3{font-size:13px;margin:0 0 7px}
+
+/* learn */
+.learn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.learn-card{position:relative;overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+.learn-card:before{content:"";position:absolute;right:-28px;top:-28px;width:70px;height:70px;border-radius:50%;background:var(--purple-soft)}
+.learn-card:nth-child(3n+2):before{background:var(--cyan-soft)}
+.learn-card:nth-child(3n+3):before{background:var(--pink-soft)}
+.learn-card span{font-size:8px;color:var(--purple);font-weight:800}.learn-card h3{font-size:13px;margin:6px 0;position:relative}.learn-card p{font-size:9px;line-height:1.6;color:#847e8b;position:relative}
+
+/* practice */
+.practice-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:14px}
+.practice-card{padding:27px}
+.topic-chip{display:inline-flex;background:var(--cyan-soft);color:#177e83;border-radius:999px;padding:7px 10px;font-size:8px;font-weight:800;letter-spacing:.06em}
+.practice-card h3{font-size:21px;line-height:1.48;letter-spacing:-.02em;margin:15px 0 22px}
+.choice-list{display:grid;gap:10px}
+.choice-btn{
+  border:1px solid var(--line);background:#fff;border-radius:13px;padding:14px 15px;text-align:left;
+  color:#393341;font-size:11px;line-height:1.5;cursor:pointer
+}
+.choice-btn:hover{border-color:#bca9e8;background:#fcfaff;transform:translateY(-1px)}
+.choice-btn.correct{border-color:#82d9bd;background:#effaf6;color:#176a50}
+.choice-btn.wrong{border-color:#efb1ba;background:#fff4f5;color:#944550}
+.feedback-box{margin-top:15px;padding:15px;border-radius:13px;background:#f7f5fb;font-size:10px;line-height:1.7;color:#5c5663}
+.feedback-box.good{background:#effaf6;color:#246b54}
+.feedback-box.bad{background:#fff3f5;color:#924653}
+.practice-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px}
+.support-btn{padding:9px 0}
+.practice-side h3{font-size:17px;margin:5px 0 14px}
+.impact-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.impact-grid>div{border-radius:13px;padding:13px;background:#faf9fc}
+.impact-grid span,.impact-grid b{display:block}.impact-grid span{font-size:8px;color:#8f8996}.impact-grid b{font-size:17px;margin-top:4px}
+.impact-grid>div:nth-child(1){background:var(--purple-soft)}
+.impact-grid>div:nth-child(2){background:var(--cyan-soft)}
+.impact-grid>div:nth-child(3){background:var(--pink-soft)}
+.adaptive-note{display:flex;gap:9px;margin-top:15px;padding:13px;border-radius:12px;background:#f7f5fb}
+.adaptive-note i{width:8px;height:8px;border-radius:50%;background:var(--pink);margin-top:4px;flex:0 0 auto}
+.adaptive-note p{font-size:9px;line-height:1.6;color:#736c79;margin:0}
+
+/* mastery */
+.mastery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mastery-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+.mastery-top{display:flex;justify-content:space-between;gap:13px;align-items:flex-start}
+.mastery-top h3{font-size:12px;margin:5px 0}.mastery-score{font-size:21px;font-weight:800;color:var(--purple)}
+.mastery-card p{font-size:9px;color:#8a8492;margin:8px 0 13px}
+.mastery-bar{height:8px;background:#f0edf5;border-radius:999px;overflow:hidden}
+.mastery-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--purple),var(--cyan))}
+.mastery-details{display:flex;justify-content:space-between;margin-top:10px;font-size:8px;color:#8e8995}
+
+/* toast */
+.toast{
+  position:fixed;right:20px;bottom:20px;z-index:20;max-width:300px;
+  padding:12px 15px;border-radius:12px;background:#2c2437;color:#fff;font-size:10px;
+  box-shadow:0 14px 30px rgba(39,24,60,.2);opacity:0;pointer-events:none;transform:translateY(8px);transition:.2s
+}
+.toast.show{opacity:1;transform:translateY(0)}
+
+@media(max-width:1000px){
+  .auth-shell{grid-template-columns:1fr}.auth-copy{display:none}.auth-panel{min-height:100vh}
+  .onboarding-layout{grid-template-columns:1fr}.setup-aside{min-height:auto}.availability-grid{grid-template-columns:repeat(4,1fr)}
+  .metric-grid{grid-template-columns:1fr 1fr}.content-grid{grid-template-columns:1fr}.learn-grid,.mastery-grid{grid-template-columns:1fr 1fr}
+  .practice-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:760px){
+  .dashboard-shell{display:block}.sidebar{display:none}
+  .dashboard-main{padding:0 16px 38px}
+  .dash-header{padding-top:20px;min-height:auto;margin-bottom:15px;align-items:flex-start}
+  .mobile-nav{
+    display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px;
+    scrollbar-width:none
+  }
+  .mobile-nav::-webkit-scrollbar{display:none}
+  .mobile-nav .nav-link{
+    flex:0 0 auto;background:#fff;border:1px solid var(--line);color:#716978;padding:9px 11px
+  }
+  .mobile-nav .nav-link.active{background:var(--purple);border-color:var(--purple);color:#fff}
+  .hero-card{flex-direction:column;align-items:flex-start;min-height:auto}
+  .hero-card h3{font-size:24px}.hero-actions{width:100%;flex-direction:row}.hero-actions button{flex:1}
+  .learn-grid,.mastery-grid{grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:560px){
+  .auth-panel{padding:25px 20px}.auth-heading h2{font-size:25px}
+  .simple-header{padding:0 18px}
+  .onboarding-layout{padding:0 12px;margin:15px auto}
+  .setup-aside{padding:25px}.setup-aside h2{font-size:25px}
+  .onboarding-card{padding:23px 18px}.two-col{grid-template-columns:1fr}
+  .availability-grid{grid-template-columns:repeat(2,1fr)}
+  .dash-header{flex-direction:column}.header-meta{width:100%}
+  .metric-grid,.learn-grid,.mastery-grid{grid-template-columns:1fr}
+  .plan-row{grid-template-columns:1fr auto}.plan-row .mini-complete{grid-column:1/-1;width:100%}
+  .section-title-row{align-items:flex-start;flex-direction:column}.session-stat{text-align:left}
+  .practice-actions{align-items:stretch;flex-direction:column}.practice-actions button{width:100%}
+  .impact-grid{grid-template-columns:1fr 1fr}
+}
+
+
+/* flashcards */
+.flash-summary,.mistake-summary{display:flex;gap:8px;flex-wrap:wrap}
+.flash-summary>div,.mistake-summary>div{min-width:92px;background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px 12px}
+.flash-summary span,.mistake-summary span,.flash-summary strong,.mistake-summary strong{display:block}
+.flash-summary span,.mistake-summary span{font-size:8px;color:#8e8995}
+.flash-summary strong,.mistake-summary strong{margin-top:3px;font-size:18px;color:var(--purple)}
+.flash-layout{display:grid;grid-template-columns:1.3fr .7fr;gap:14px}
+.flash-card-shell{min-height:420px;border-radius:22px;padding:24px;background:radial-gradient(circle at 95% 5%,rgba(35,203,208,.18),transparent 27%),linear-gradient(145deg,#fff,#fcfaff);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column}
+.flash-topline{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.flash-schedule{font-size:9px;color:#8f8996}
+.flash-card-face{flex:1;display:flex;flex-direction:column;justify-content:center;padding:34px 18px}
+.flash-card-face h3{font-size:25px;line-height:1.45;letter-spacing:-.03em;margin:10px 0}
+.flash-back{margin-top:22px;padding-top:22px;border-top:1px solid var(--line)}
+.flash-back p{font-size:13px;line-height:1.75;margin:8px 0 0;color:#4d4754}
+.flash-support{margin-top:13px;padding:13px;border-radius:12px;background:var(--purple-soft);font-size:10px;line-height:1.65;color:#665b72}
+.flash-actions{display:flex;justify-content:center}
+.rating-row{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rating-btn{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;cursor:pointer}
+.rating-btn span,.rating-btn small{display:block}
+.rating-btn span{font-size:10px;font-weight:700}
+.rating-btn small{font-size:8px;color:#8b8591;margin-top:2px}
+.rating-btn.again:hover{background:#fff2f4;border-color:#efb3bd}
+.rating-btn.hard:hover{background:#fff8ef;border-color:#efcf9d}
+.rating-btn.good:hover{background:#f1fbf6;border-color:#a8dcc7}
+.rating-btn.easy:hover{background:var(--cyan-soft);border-color:#8edfe2}
+.flash-side h3{font-size:17px;margin:5px 0 10px}
+.flash-rule{padding:12px 0;border-bottom:1px solid var(--line)}
+.flash-rule:last-child{border-bottom:0}
+.flash-rule b{font-size:10px;color:var(--purple)}
+.flash-rule p{font-size:9px;line-height:1.55;color:#827c89;margin:4px 0 0}
+
+/* mistake book */
+.mistake-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
+.filter-btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-size:9px;font-weight:700;color:#7a7381;cursor:pointer}
+.filter-btn.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+.mistake-list{display:grid;gap:11px}
+.mistake-card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:0 5px 18px rgba(72,44,119,.03)}
+.mistake-card-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+.mistake-topic{font-size:8px;font-weight:800;letter-spacing:.06em;color:var(--purple)}
+.mistake-question{font-size:13px;line-height:1.6;margin:5px 0 0}
+.status-chip{flex:0 0 auto;border-radius:999px;padding:7px 9px;font-size:8px;font-weight:800;text-transform:uppercase}
+.status-chip.open{background:#fff0f3;color:#b14659}
+.status-chip.reviewing{background:#fff8e9;color:#9c6b15}
+.status-chip.resolved{background:#edf9f4;color:#267357}
+.mistake-stats{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.mistake-stats span{background:#f8f6fb;border-radius:999px;padding:7px 9px;font-size:8px;color:#756e7b}
+.mistake-explanation{font-size:10px;line-height:1.7;color:#6f6876;padding:13px;background:#faf9fc;border-radius:12px}
+.mistake-note-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:11px}
+.mistake-note-row input{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-size:10px}
+.mistake-note-row button{border:0;border-radius:11px;padding:10px 13px;background:var(--purple-soft);color:var(--purple);font-size:9px;font-weight:700;cursor:pointer}
+.mistake-empty{min-height:230px;display:grid;place-items:center;text-align:center;background:#fff;border:1px dashed #d9d2e7;border-radius:18px;padding:28px}
+.mistake-empty strong{font-size:16px}.mistake-empty p{font-size:10px;color:#8a8492;max-width:420px;line-height:1.7}
+
+@media(max-width:1000px){.flash-layout{grid-template-columns:1fr}}
+@media(max-width:760px){.flash-card-face{padding:24px 5px}.flash-card-face h3{font-size:21px}.rating-row{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.flash-summary,.mistake-summary{width:100%}.flash-summary>div,.mistake-summary>div{flex:1}.mistake-card-top{flex-direction:column}.mistake-note-row{grid-template-columns:1fr}}
+
+
+.auth-dev-note{
+  margin-top:10px;padding:11px 12px;border-radius:11px;
+  background:#f8f6fc;color:#7a7384;font-size:9px;line-height:1.55
+}
+.auth-dev-note strong{color:#5b2bbd}
+
+</style>
+</head>
+<body>
+<main id="app">
+
+  <!-- LOADING -->
+  <section id="loadingView" class="center-view">
+    <div class="brand-lockup">
+      <div class="brand-mark">FA</div>
+      <div>
+        <h1>FinAdaptive</h1>
+        <p>CFA + FRM adaptive study platform</p>
+      </div>
+    </div>
+    <div class="loader" aria-label="Loading"></div>
+  </section>
+
+  <!-- AUTH -->
+  <section id="authView" class="auth-shell hidden">
+    <div class="auth-copy">
+      <div class="brand-lockup auth-brand">
+        <div class="brand-mark brand-mark-light">FA</div>
+        <div>
+          <h1>FinAdaptive</h1>
+          <p>CFA + FRM Study OS</p>
+        </div>
+      </div>
+
+      <div class="auth-hero">
+        <span class="eyebrow light-eyebrow">ADAPTIVE FINANCE LEARNING</span>
+        <h2>Study smarter.<br/>Advance faster.</h2>
+        <p>One place to prepare for CFA and FRM with a study plan that reacts to your real performance.</p>
+
+        <div class="auth-points">
+          <div><span class="point-orb cyan"></span><p><strong>Adaptive study plan</strong><small>Built around your exam date and availability.</small></p></div>
+          <div><span class="point-orb pink"></span><p><strong>Mastery intelligence</strong><small>Weak topics automatically receive more attention.</small></p></div>
+          <div><span class="point-orb purple"></span><p><strong>Support your way</strong><small>Spanish, Portuguese or English explanations.</small></p></div>
+        </div>
+      </div>
+
+      <div class="auth-accent-row">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div class="auth-panel">
+      <div class="auth-panel-inner">
+        <div class="auth-heading">
+          <span class="eyebrow">WELCOME</span>
+          <h2>Your preparation starts here.</h2>
+          <p>Your account, plan and progress sync securely with Supabase.</p>
+        </div>
+
+        <div class="auth-tabs">
+          <button id="loginTab" class="tab active" type="button">Log in</button>
+          <button id="signupTab" class="tab" type="button">Create account</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <label>Email
+            <input id="loginEmail" type="email" autocomplete="email" required placeholder="you@example.com"/>
+          </label>
+          <label>Password
+            <input id="loginPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="••••••••"/>
+          </label>
+          <button class="primary-btn" type="submit">Log in</button>
+        </form>
+
+        <form id="signupForm" class="auth-form hidden">
+          <label>Name
+            <input id="signupName" type="text" autocomplete="name" required placeholder="Your name"/>
+          </label>
+          <label>Email
+            <input id="signupEmail" type="email" autocomplete="email" required placeholder="you@example.com"/>
+          </label>
+          <label>Password
+            <input id="signupPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="At least 6 characters"/>
+          </label>
+          <button class="primary-btn" type="submit">Create account</button>
+        </form>
+
+        <div id="authMessage" class="message hidden"></div>
+        <div class="auth-dev-note">
+          <strong>Test environment:</strong>
+          email confirmation returns to the current deployed FinAdaptive URL.
+        </div>
+
+        <div class="secure-note">
+          <i></i>
+          <span>Personal progress protected with Row Level Security.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ONBOARDING -->
+  <section id="onboardingView" class="onboarding-shell hidden">
+    <header class="simple-header">
+      <div class="brand-lockup small">
+        <div class="brand-mark">FA</div>
+        <div>
+          <h1>FinAdaptive</h1>
+          <p>Set up your study profile</p>
+        </div>
+      </div>
+      <button id="onboardingSignout" class="ghost-btn" type="button">Sign out</button>
+    </header>
+
+    <div class="onboarding-layout">
+      <aside class="setup-aside">
+        <span class="eyebrow light-eyebrow">YOUR SETUP</span>
+        <h2>Tell us where you want to go.</h2>
+        <p>Your first study plan uses these inputs. Once you start practicing, your actual performance becomes the strongest signal.</p>
+
+        <div class="setup-steps">
+          <div><b>01</b><span><strong>Exam</strong><small>Track + target date</small></span></div>
+          <div><b>02</b><span><strong>Support</strong><small>Language + learning style</small></span></div>
+          <div><b>03</b><span><strong>Availability</strong><small>Weekly study capacity</small></span></div>
+        </div>
+      </aside>
+
+      <div class="onboarding-card">
+        <div class="progress-steps">
+          <span class="active">1</span><i></i><span class="active">2</span><i></i><span class="active">3</span>
+        </div>
+
+        <form id="onboardingForm">
+          <div class="step">
+            <span class="eyebrow">01 · YOUR EXAM</span>
+            <h2>What are you preparing for?</h2>
+            <div class="two-col">
+              <label class="field">Certification
+                <select id="certification" required>
+                  <option value="CFA">CFA</option>
+                  <option value="FRM">FRM</option>
+                </select>
+              </label>
+              <label class="field">Level
+                <select id="level" required></select>
+              </label>
+            </div>
+            <label class="field">Exam date
+              <input id="examDate" type="date" required/>
+            </label>
+          </div>
+
+          <div class="step">
+            <span class="eyebrow">02 · SUPPORT</span>
+            <h2>How should the platform help you?</h2>
+            <div class="two-col">
+              <label class="field">Support language
+                <select id="supportLanguage">
+                  <option value="es">Español</option>
+                  <option value="pt">Português</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+              <label class="field">Learning style
+                <select id="learningStyle">
+                  <option value="balanced">Balanced</option>
+                  <option value="detailed">Detailed explanations</option>
+                  <option value="practice_heavy">More practice</option>
+                  <option value="concise">Concise explanations</option>
+                </select>
+              </label>
+            </div>
+            <div class="exam-language-note">
+              <div><span>Exam content language</span><small>Questions stay exam-realistic</small></div>
+              <strong>English</strong>
+            </div>
+          </div>
+
+          <div class="step">
+            <span class="eyebrow">03 · AVAILABILITY</span>
+            <h2>How much can you study each day?</h2>
+            <p class="muted">Use realistic minutes. You can change this later.</p>
+            <div id="availabilityGrid" class="availability-grid"></div>
+          </div>
+
+          <button class="primary-btn large" type="submit">Create my adaptive plan</button>
+          <div id="onboardingMessage" class="message hidden"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="dashboardView" class="dashboard-shell hidden">
+    <aside class="sidebar">
+      <div class="brand-lockup sidebar-brand">
+        <div class="brand-mark brand-mark-light">FA</div>
+        <div>
+          <h1>FinAdaptive</h1>
+          <p>Study OS</p>
+        </div>
+      </div>
+
+      <span class="sidebar-label">WORKSPACE</span>
+      <nav class="sidebar-nav">
+        <button class="nav-link active" data-section="overview" type="button"><span>Overview</span></button>
+        <button class="nav-link" data-section="plan" type="button"><span>Study plan</span></button>
+        <button class="nav-link" data-section="learn" type="button"><span>Learn</span></button>
+        <button class="nav-link" data-section="practice" type="button"><span>Practice</span></button>
+        <button class="nav-link" data-section="mastery" type="button"><span>Mastery</span></button>
+        <button class="nav-link" data-section="flashcards" type="button"><span>Flashcards</span></button>
+        <button class="nav-link" data-section="mistakes" type="button"><span>Mistake Book</span></button>
+      </nav>
+
+      <span class="sidebar-label coming-label">COMING NEXT</span>
+      <div class="future-feature"><span>AI Tutor</span><small>soon</small></div>
+      <div class="future-feature"><span>Telegram Coach</span><small>soon</small></div>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="sidebar-status">
+        <div class="status-row"><i></i><span><strong>Supabase connected</strong><small>Progress sync active</small></span></div>
+        <button id="signoutBtn" class="sidebar-signout" type="button">Sign out</button>
+      </div>
+    </aside>
+
+    <div class="dashboard-main">
+      <header class="dash-header">
+        <div>
+          <span class="eyebrow">PERSONAL STUDY SYSTEM</span>
+          <h2 id="welcomeName">Welcome</h2>
+        </div>
+        <div class="header-meta">
+          <span id="trackBadge" class="pill"></span>
+          <span id="supportBadge" class="pill secondary"></span>
+        </div>
+      </header>
+
+      <nav class="mobile-nav">
+        <button class="nav-link active" data-section="overview" type="button">Overview</button>
+        <button class="nav-link" data-section="plan" type="button">Plan</button>
+        <button class="nav-link" data-section="learn" type="button">Learn</button>
+        <button class="nav-link" data-section="practice" type="button">Practice</button>
+        <button class="nav-link" data-section="mastery" type="button">Mastery</button>
+        <button class="nav-link" data-section="flashcards" type="button">Cards</button>
+        <button class="nav-link" data-section="mistakes" type="button">Mistakes</button>
+      </nav>
+
+      <!-- OVERVIEW -->
+      <section id="overviewSection" class="dash-section">
+        <div class="hero-card">
+          <div>
+            <span class="eyebrow hero-eyebrow">NEXT RECOMMENDED SESSION</span>
+            <h3 id="nextTaskTitle">Loading your plan…</h3>
+            <p id="nextTaskReason"></p>
+            <div class="hero-meta">
+              <span id="nextTaskMinutes"></span>
+              <span id="daysToExam"></span>
+            </div>
+          </div>
+          <div class="hero-actions">
+            <button id="completeNextBtn" class="white-btn" type="button">Mark complete</button>
+            <button class="outline-btn" data-open-section="practice" type="button">Go to practice</button>
+          </div>
+          <div class="hero-decoration"><i></i><i></i><i></i></div>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric-card purple-card">
+            <span>PLAN ITEMS</span><strong id="metricPlanItems">0</strong><small>This week</small>
+          </article>
+          <article class="metric-card cyan-card">
+            <span>COMPLETED</span><strong id="metricCompleted">0</strong><small>This week</small>
+          </article>
+          <article class="metric-card pink-card">
+            <span>AVAILABLE</span><strong id="metricHours">0h</strong><small>Weekly capacity</small>
+          </article>
+          <article class="metric-card neutral-card">
+            <span>TOPICS</span><strong id="metricTopics">0</strong><small>Current curriculum</small>
+          </article>
+        </div>
+
+        <div class="content-grid">
+          <article class="panel">
+            <div class="panel-head">
+              <div><span class="eyebrow">TODAY</span><h3>Your study plan</h3></div>
+              <button class="text-btn" data-open-section="plan" type="button">View full plan →</button>
+            </div>
+            <div id="todayPlan" class="plan-list"></div>
+          </article>
+
+          <article class="panel topic-panel">
+            <div class="panel-head">
+              <div><span class="eyebrow">CURRICULUM</span><h3>Your topics</h3></div>
+              <button class="text-btn" data-open-section="learn" type="button">Explore →</button>
+            </div>
+            <div id="topicPreview" class="topic-preview"></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- PLAN -->
+      <section id="planSection" class="dash-section hidden">
+        <div class="section-title">
+          <span class="eyebrow">ADAPTIVE SCHEDULE</span>
+          <h2>Your study plan</h2>
+          <p>Generated from your exam date, study capacity and current mastery signals.</p>
+        </div>
+        <div id="fullPlan" class="full-plan"></div>
+      </section>
+
+      <!-- LEARN -->
+      <section id="learnSection" class="dash-section hidden">
+        <div class="section-title">
+          <span class="eyebrow">CURRICULUM</span>
+          <h2 id="learnTitle">Your curriculum</h2>
+          <p>Core topics stored in Supabase for your selected track.</p>
+        </div>
+        <div id="learnTopics" class="learn-grid"></div>
+      </section>
+
+      <!-- PRACTICE -->
+      <section id="practiceSection" class="dash-section hidden">
+        <div class="section-title section-title-row">
+          <div>
+            <span class="eyebrow">ADAPTIVE PRACTICE</span>
+            <h2>Practice session</h2>
+            <p>Every answer updates your real mastery and future plan priority.</p>
+          </div>
+          <div class="session-stat">
+            <span id="practiceCount">0 answered</span>
+            <strong id="practiceSessionAccuracy">—</strong>
+          </div>
+        </div>
+
+        <div class="practice-grid">
+          <article class="panel practice-card">
+            <span id="practiceTopic" class="topic-chip">TOPIC</span>
+            <h3 id="practiceQuestion">Loading question…</h3>
+            <div id="practiceChoices" class="choice-list"></div>
+            <div id="practiceFeedback" class="feedback-box hidden"></div>
+            <div class="practice-actions">
+              <button id="supportBtn" class="support-btn" type="button">Explain in support language</button>
+              <button id="nextQuestionBtn" class="primary-btn hidden" type="button">Next question</button>
+            </div>
+          </article>
+
+          <aside class="panel practice-side">
+            <span class="eyebrow">LIVE IMPACT</span>
+            <h3>This topic right now</h3>
+            <div class="impact-grid">
+              <div><span>Attempts</span><b id="impactAttempts">0</b></div>
+              <div><span>Mastery</span><b id="impactMastery">—</b></div>
+              <div><span>Accuracy</span><b id="impactAccuracy">—</b></div>
+              <div><span>Plan priority</span><b id="impactPriority">—</b></div>
+            </div>
+            <div class="adaptive-note">
+              <i></i>
+              <p>Your future plan changes automatically after every recorded attempt.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- MASTERY -->
+      <section id="masterySection" class="dash-section hidden">
+        <div class="section-title">
+          <span class="eyebrow">ADAPTIVE ENGINE</span>
+          <h2>Topic mastery</h2>
+          <p>Mastery is recalculated directly in Supabase from your real attempts.</p>
+        </div>
+        <div id="masteryGrid" class="mastery-grid"></div>
+      </section>
+
+      <!-- FLASHCARDS -->
+      <section id="flashcardsSection" class="dash-section hidden">
+        <div class="section-title section-title-row">
+          <div>
+            <span class="eyebrow">SPACED REPETITION</span>
+            <h2>Flashcards</h2>
+            <p>Review due concepts and let FinAdaptive schedule the next repetition automatically.</p>
+          </div>
+          <div class="flash-summary">
+            <div><span>Due now</span><strong id="flashDueCount">0</strong></div>
+            <div><span>Reviewed</span><strong id="flashReviewedCount">0</strong></div>
+          </div>
+        </div>
+
+        <div class="flash-layout">
+          <article class="flash-card-shell">
+            <div class="flash-topline">
+              <span id="flashTopic" class="topic-chip">TOPIC</span>
+              <span id="flashSchedule" class="flash-schedule">New card</span>
+            </div>
+            <div class="flash-card-face">
+              <span class="eyebrow">QUESTION</span>
+              <h3 id="flashFront">Loading flashcards…</h3>
+              <div id="flashBack" class="flash-back hidden">
+                <span class="eyebrow">ANSWER</span>
+                <p id="flashBackText"></p>
+                <div id="flashSupportText" class="flash-support"></div>
+              </div>
+            </div>
+            <div class="flash-actions">
+              <button id="revealFlashBtn" class="primary-btn" type="button">Reveal answer</button>
+              <div id="flashRatingButtons" class="rating-row hidden">
+                <button class="rating-btn again" data-flash-rating="again" type="button"><span>Again</span><small>1 day</small></button>
+                <button class="rating-btn hard" data-flash-rating="hard" type="button"><span>Hard</span><small>short</small></button>
+                <button class="rating-btn good" data-flash-rating="good" type="button"><span>Good</span><small>normal</small></button>
+                <button class="rating-btn easy" data-flash-rating="easy" type="button"><span>Easy</span><small>long</small></button>
+              </div>
+            </div>
+          </article>
+
+          <aside class="panel flash-side">
+            <span class="eyebrow">HOW IT ADAPTS</span>
+            <h3>Review timing</h3>
+            <div class="flash-rule"><b>Again</b><p>Reset the interval and bring the concept back soon.</p></div>
+            <div class="flash-rule"><b>Hard</b><p>Keep the interval short and reduce confidence.</p></div>
+            <div class="flash-rule"><b>Good</b><p>Increase the interval using your current ease factor.</p></div>
+            <div class="flash-rule"><b>Easy</b><p>Extend the interval more aggressively.</p></div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- MISTAKE BOOK -->
+      <section id="mistakesSection" class="dash-section hidden">
+        <div class="section-title section-title-row">
+          <div>
+            <span class="eyebrow">MISTAKE INTELLIGENCE</span>
+            <h2>Mistake Book</h2>
+            <p>Every wrong answer enters here automatically and stays until you demonstrate recovery.</p>
+          </div>
+          <div class="mistake-summary">
+            <div><span>Open</span><strong id="mistakeOpenCount">0</strong></div>
+            <div><span>Reviewing</span><strong id="mistakeReviewingCount">0</strong></div>
+            <div><span>Resolved</span><strong id="mistakeResolvedCount">0</strong></div>
+          </div>
+        </div>
+
+        <div class="mistake-toolbar">
+          <button class="filter-btn active" data-mistake-filter="all" type="button">All</button>
+          <button class="filter-btn" data-mistake-filter="open" type="button">Open</button>
+          <button class="filter-btn" data-mistake-filter="reviewing" type="button">Reviewing</button>
+          <button class="filter-btn" data-mistake-filter="resolved" type="button">Resolved</button>
+        </div>
+
+        <div id="mistakeList" class="mistake-list"></div>
+      </section>
+    </div>
+  </section>
+
+  <div id="toast" class="toast"></div>
+</main>
+<script type="module">
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/+esm';
+
+const SUPABASE_URL = "https://ohtvecqryqtlkejsgpam.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_2p9EZTW60u5SEvl8T_LsCQ_DI2G5yZ1";
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const el = (id) => document.getElementById(id);
+const views = ['loadingView','authView','onboardingView','dashboardView'];
+const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+let currentUser = null;
+let currentProfile = null;
+let currentEnrollment = null;
+let currentTopics = [];
+let currentPlan = [];
+let currentAvailability = [];
+let currentMastery = [];
+let practiceQuestions = [];
+let currentPracticeQuestion = null;
+let practiceStartedAt = null;
+let practiceSupportUsed = false;
+let practiceAnswered = 0;
+let practiceCorrect = 0;
+let flashcards = [];
+let flashProgress = [];
+let currentFlashcard = null;
+let flashReviewedThisSession = 0;
+let mistakeItems = [];
+let mistakeFilter = 'all';
+
+function showView(id) {
+  views.forEach(v => el(v).classList.toggle('hidden', v !== id));
+}
+function msg(target, text, type='') {
+  const node = el(target);
+  node.textContent = text;
+  node.className = `message ${type}`;
+  node.classList.remove('hidden');
+}
+function clearMsg(target) { el(target).classList.add('hidden'); }
+function toast(text) {
+  el('toast').textContent = text;
+  el('toast').classList.add('show');
+  setTimeout(() => el('toast').classList.remove('show'), 1800);
+}
+function supportLabel(code) {
+  return code === 'es' ? 'Español support' : code === 'pt' ? 'Português support' : 'English support';
+}
+function levelOptions(cert) {
+  return cert === 'CFA'
+    ? [{v:'I',t:'Level I'},{v:'II',t:'Level II'},{v:'III',t:'Level III'}]
+    : [{v:'I',t:'Part I'},{v:'II',t:'Part II'}];
+}
+function renderLevelOptions() {
+  el('level').innerHTML = levelOptions(el('certification').value).map(x => `<option value="${x.v}">${x.t}</option>`).join('');
+}
+function renderAvailability() {
+  el('availabilityGrid').innerHTML = weekdays.map((d,i) => `
+    <label class="day-input">
+      <span>${d}</span>
+      <input type="number" min="0" max="720" step="15" value="${i===0?60:i===6?180:120}" data-day="${i}" aria-label="${d} study minutes"/>
+    </label>
+  `).join('');
+}
+async function getProfile(userId) {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+async function getActiveEnrollment(userId) {
+  const { data, error } = await supabase.from('exam_enrollments').select('*').eq('user_id', userId).eq('active', true).order('created_at', {ascending:false}).limit(1).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+async function boot() {
+  showView('loadingView');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) {
+    showView('authView');
+    return;
+  }
+  currentUser = session.user;  try {
+    currentProfile = await getProfile(currentUser.id);
+    currentEnrollment = await getActiveEnrollment(currentUser.id);
+    if (!currentProfile?.onboarding_completed || !currentEnrollment) {
+      showView('onboardingView');
+      return;
+    }
+    await loadDashboard();
+  } catch (e) {
+    console.error(e);
+    showView('authView');
+    msg('authMessage','Could not load your account. Please log in again.','error');
+  }
+}
+
+el('loginTab').addEventListener('click', () => {
+  el('loginTab').classList.add('active'); el('signupTab').classList.remove('active');
+  el('loginForm').classList.remove('hidden'); el('signupForm').classList.add('hidden'); clearMsg('authMessage');
+});
+el('signupTab').addEventListener('click', () => {
+  el('signupTab').classList.add('active'); el('loginTab').classList.remove('active');
+  el('signupForm').classList.remove('hidden'); el('loginForm').classList.add('hidden'); clearMsg('authMessage');
+});
+
+el('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); clearMsg('authMessage');
+  const email = el('signupEmail').value.trim();
+  const password = el('signupPassword').value;
+  const display_name = el('signupName').value.trim();
+  const submitBtn = e.submitter;
+  const originalText = submitBtn?.textContent || 'Create account';
+
+  try {
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account…';
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name },
+        emailRedirectTo: `${window.location.origin}/`
+      }
+    });
+
+    if (error) {
+      const code = error.code || '';
+      const raw = error.message || 'Could not create account.';
+
+      if (code === 'email_address_not_authorized' || /not authorized/i.test(raw)) {
+        return msg(
+          'authMessage',
+          'The verification email could not be sent. Check the Supabase SMTP configuration and the email provider\'s test-recipient restrictions.',
+          'error'
+        );
+      }
+
+      if (/rate limit/i.test(raw) || code === 'over_email_send_rate_limit') {
+        return msg(
+          'authMessage',
+          'Supabase email rate limit reached. Wait a little or configure custom SMTP.',
+          'error'
+        );
+      }
+
+      return msg('authMessage', raw, 'error');
+    }
+
+    if (data.session) {
+      currentUser = data.user;
+      currentProfile = await getProfile(currentUser.id);
+      showView('onboardingView');
+    } else if (data.user) {
+      msg(
+        'authMessage',
+        'Account created. Check your email to confirm it. If no email arrives, verify that this address belongs to the Supabase organization or configure custom SMTP.',
+        'success'
+      );
+      el('loginTab').click();
+      el('loginEmail').value = email;
+    } else {
+      msg('authMessage','Supabase did not return a user or session. Please try again.','error');
+    }
+  } catch (err) {
+    console.error('Signup error:', err);
+    msg(
+      'authMessage',
+      'Could not reach Supabase from this preview. Open the app from a normal web server (localhost, Netlify or Vercel) and try again.',
+      'error'
+    );
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  }
+});
+
+el('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); clearMsg('authMessage');
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: el('loginEmail').value.trim(),
+    password: el('loginPassword').value
+  });
+  if (error) return msg('authMessage', error.message, 'error');
+  currentUser = data.user;
+  currentProfile = await getProfile(currentUser.id);
+  currentEnrollment = await getActiveEnrollment(currentUser.id);
+  if (!currentProfile?.onboarding_completed || !currentEnrollment) showView('onboardingView');
+  else await loadDashboard();
+});
+
+async function signout() {
+  await supabase.auth.signOut();
+  currentUser=null; currentProfile=null; currentEnrollment=null; currentPlan=[]; currentTopics=[]; currentMastery=[]; flashcards=[]; flashProgress=[]; currentFlashcard=null; mistakeItems=[];
+  showView('authView');
+}
+el('signoutBtn').addEventListener('click', signout);
+el('onboardingSignout').addEventListener('click', signout);
+el('certification').addEventListener('change', renderLevelOptions);
+
+el('onboardingForm').addEventListener('submit', async (e) => {
+  e.preventDefault(); clearMsg('onboardingMessage');
+  const certification = el('certification').value;
+  const level = el('level').value;
+  const exam_date = el('examDate').value;
+  const support_language = el('supportLanguage').value;
+  const learning_style = el('learningStyle').value;
+  if (!exam_date) return msg('onboardingMessage','Choose an exam date.','error');
+
+  const availability = [...document.querySelectorAll('[data-day]')].map(inp => ({
+    user_id: currentUser.id,
+    day_of_week: Number(inp.dataset.day),
+    morning_minutes: 0,
+    evening_minutes: Math.max(0, Math.min(720, Number(inp.value)||0))
+  }));
+
+  try {
+    const { error: profileError } = await supabase.from('profiles').update({
+      support_language, learning_style, onboarding_completed:true, updated_at:new Date().toISOString()
+    }).eq('id',currentUser.id);
+    if (profileError) throw profileError;
+
+    await supabase.from('exam_enrollments').update({active:false}).eq('user_id',currentUser.id).eq('active',true);
+
+    const { data: enrollment, error: enrollmentError } = await supabase.from('exam_enrollments').insert({
+      user_id: currentUser.id, certification, level, exam_date, exam_language:'en', active:true
+    }).select().single();
+    if (enrollmentError) throw enrollmentError;
+
+    const { error: availError } = await supabase.from('study_availability').upsert(availability,{onConflict:'user_id,day_of_week'});
+    if (availError) throw availError;
+
+    currentEnrollment = enrollment;
+    currentProfile = await getProfile(currentUser.id);
+    await generateInitialPlan(enrollment, availability);
+    await loadDashboard();
+  } catch (err) {
+    console.error(err);
+    msg('onboardingMessage', err.message || 'Could not save onboarding.','error');
+  }
+});
+
+async function generateInitialPlan(enrollment, availability) {
+  const { data: topics, error } = await supabase.from('topics')
+    .select('*').eq('certification',enrollment.certification).eq('level',enrollment.level).order('name');
+  if (error) throw error;
+  if (!topics?.length) return;
+
+  await supabase.from('study_plan_items').delete().eq('user_id',currentUser.id).eq('enrollment_id',enrollment.id);
+
+  const byDay = Object.fromEntries(availability.map(x => [x.day_of_week, x.morning_minutes+x.evening_minutes]));
+  const today = new Date();
+  const items = [];
+  let topicIndex = 0;
+
+  for (let offset=0; offset<14; offset++) {
+    const d = new Date(today);
+    d.setDate(today.getDate()+offset);
+    const mins = byDay[d.getDay()] || 0;
+    if (mins < 20) continue;
+
+    const topic = topics[topicIndex % topics.length];
+    const date = d.toISOString().slice(0,10);
+    const learnMins = Math.max(20, Math.round(mins*0.6/5)*5);
+    const practiceMins = Math.max(15, mins-learnMins);
+
+    items.push({
+      user_id:currentUser.id,enrollment_id:enrollment.id,topic_id:topic.id,scheduled_date:date,
+      item_type:'learn',title:`Learn · ${topic.name}`,planned_minutes:learnMins,priority:70,
+      adaptive_reason:'Initial plan based on your available study time.'
+    });
+    if (practiceMins >= 15) items.push({
+      user_id:currentUser.id,enrollment_id:enrollment.id,topic_id:topic.id,scheduled_date:date,
+      item_type:'practice',title:`Practice · ${topic.name}`,planned_minutes:practiceMins,priority:65,
+      adaptive_reason:'Practice follows the learning block to reinforce retention.'
+    });
+    topicIndex++;
+  }
+  if (items.length) {
+    const { error: insertError } = await supabase.from('study_plan_items').insert(items);
+    if (insertError) throw insertError;
+  }
+}
+
+async function loadDashboard() {
+  showView('loadingView');
+  currentProfile = await getProfile(currentUser.id);
+  currentEnrollment = await getActiveEnrollment(currentUser.id);
+
+  const [topicsRes, planRes, availRes, masteryRes, flashRes, flashProgressRes, mistakeRes] = await Promise.all([
+    supabase.from('topics').select('*').eq('certification',currentEnrollment.certification).eq('level',currentEnrollment.level).order('name'),
+    supabase.from('study_plan_items').select('*,topics(name)').eq('user_id',currentUser.id).eq('enrollment_id',currentEnrollment.id).order('scheduled_date').order('priority',{ascending:false}),
+    supabase.from('study_availability').select('*').eq('user_id',currentUser.id).order('day_of_week'),
+    supabase.from('topic_mastery').select('*,topics(name,certification,level)').eq('user_id',currentUser.id),
+    supabase.from('flashcards').select('*,topics(name,certification,level)').eq('topics.certification',currentEnrollment.certification).eq('topics.level',currentEnrollment.level),
+    supabase.from('flashcard_progress').select('*').eq('user_id',currentUser.id),
+    supabase.from('mistake_book_items').select('*,questions(stem,explanation_en,support_es,support_pt,topics(name,certification,level))').eq('user_id',currentUser.id).order('updated_at',{ascending:false})
+  ]);
+  if (topicsRes.error) throw topicsRes.error;
+  if (planRes.error) throw planRes.error;
+  if (availRes.error) throw availRes.error;
+  if (masteryRes.error) throw masteryRes.error;
+  if (flashRes.error) throw flashRes.error;
+  if (flashProgressRes.error) throw flashProgressRes.error;
+  if (mistakeRes.error) throw mistakeRes.error;
+  currentTopics = topicsRes.data || [];
+  currentPlan = planRes.data || [];
+  currentAvailability = availRes.data || [];
+  currentMastery = (masteryRes.data || []).filter(x => x.topics?.certification===currentEnrollment.certification && x.topics?.level===currentEnrollment.level);
+  flashcards = (flashRes.data || []).filter(x => x.topics);
+  flashProgress = flashProgressRes.data || [];
+  mistakeItems = (mistakeRes.data || []).filter(x => x.questions?.topics?.certification===currentEnrollment.certification && x.questions?.topics?.level===currentEnrollment.level);
+  renderDashboard();
+  renderMastery();
+  renderFlashcards();
+  renderMistakes();
+  showView('dashboardView');
+}
+
+function renderDashboard() {
+  const name = currentProfile?.display_name || currentUser.email?.split('@')[0] || 'Candidate';
+  el('welcomeName').textContent = `Welcome, ${name}`;
+  el('trackBadge').textContent = `${currentEnrollment.certification} ${currentEnrollment.certification==='CFA'?'Level':'Part'} ${currentEnrollment.level}`;
+  el('supportBadge').textContent = supportLabel(currentProfile.support_language);
+
+  const exam = new Date(currentEnrollment.exam_date+'T00:00:00');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const days = Math.max(0, Math.ceil((exam-now)/86400000));
+  el('daysToExam').textContent = `${days} days to exam`;
+
+  const pending = currentPlan.find(x => x.status === 'pending');
+  if (pending) {
+    el('nextTaskTitle').textContent = pending.title;
+    el('nextTaskReason').textContent = pending.adaptive_reason || 'Recommended from your current study plan.';
+    el('nextTaskMinutes').textContent = `${pending.planned_minutes} min`;
+    el('completeNextBtn').disabled = false;
+    el('completeNextBtn').dataset.id = pending.id;
+  } else {
+    el('nextTaskTitle').textContent = 'Your current plan is complete';
+    el('nextTaskReason').textContent = 'We will generate the next adaptive block after more performance data is available.';
+    el('nextTaskMinutes').textContent = '';
+    el('completeNextBtn').disabled = true;
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  const weekAhead = new Date(); weekAhead.setDate(weekAhead.getDate()+7);
+  const weekDate = weekAhead.toISOString().slice(0,10);
+  const weekItems = currentPlan.filter(x=>x.scheduled_date>=today && x.scheduled_date<weekDate);
+  el('metricPlanItems').textContent = weekItems.length;
+  el('metricCompleted').textContent = weekItems.filter(x=>x.status==='completed').length;
+  const weeklyMinutes = currentAvailability.reduce((a,x)=>a+x.morning_minutes+x.evening_minutes,0);
+  el('metricHours').textContent = `${(weeklyMinutes/60).toFixed(1)}h`;
+  el('metricTopics').textContent = currentTopics.length;
+
+  const todayItems = currentPlan.filter(x=>x.scheduled_date===today);
+  el('todayPlan').innerHTML = todayItems.length ? todayItems.map(planRow).join('') : `<div class="empty">No study block scheduled for today.</div>`;
+  bindCompleteButtons();
+
+  el('topicPreview').innerHTML = currentTopics.slice(0,6).map(t=>`<div class="topic-preview-item">${t.name}</div>`).join('');
+  renderFullPlan();
+  renderLearn();
+  renderMastery();
+}
+
+function planRow(item) {
+  return `<div class="plan-row">
+    <div><strong>${item.title}</strong><small>${item.topics?.name || item.item_type}</small></div>
+    <em>${item.planned_minutes} min</em>
+    <button class="mini-complete ${item.status==='completed'?'done':''}" data-complete="${item.id}" ${item.status==='completed'?'disabled':''}>${item.status==='completed'?'Done ✓':'Complete'}</button>
+  </div>`;
+}
+function bindCompleteButtons() {
+  document.querySelectorAll('[data-complete]').forEach(btn=>btn.addEventListener('click',()=>completeItem(btn.dataset.complete)));
+}
+async function completeItem(id) {
+  const { error } = await supabase.from('study_plan_items').update({status:'completed',completed_at:new Date().toISOString()}).eq('id',id).eq('user_id',currentUser.id);
+  if (error) return toast(error.message);
+  currentPlan = currentPlan.map(x=>x.id===id?{...x,status:'completed'}:x);
+  renderDashboard(); toast('Study item completed.');
+}
+el('completeNextBtn').addEventListener('click',()=>{ if(el('completeNextBtn').dataset.id) completeItem(el('completeNextBtn').dataset.id); });
+
+function renderFullPlan() {
+  const groups = {};
+  currentPlan.forEach(item => (groups[item.scheduled_date] ||= []).push(item));
+  el('fullPlan').innerHTML = Object.entries(groups).map(([date,items])=>`
+    <div class="plan-day">
+      <div class="plan-day-title"><h3>${new Date(date+'T00:00:00').toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})}</h3><span class="eyebrow">${items.reduce((a,x)=>a+x.planned_minutes,0)} MIN</span></div>
+      ${items.map(planRow).join('')}
+    </div>`).join('') || `<div class="empty">No plan items yet.</div>`;
+  bindCompleteButtons();
+}
+function renderLearn() {
+  el('learnTitle').textContent = `${currentEnrollment.certification} ${currentEnrollment.certification==='CFA'?'Level':'Part'} ${currentEnrollment.level} curriculum`;
+  el('learnTopics').innerHTML = currentTopics.map((t,i)=>`
+    <article class="learn-card"><span>TOPIC ${String(i+1).padStart(2,'0')}</span><h3>${t.name}</h3><p>Content modules, formulas and adaptive practice will be attached to this topic in the next stage.</p></article>
+  `).join('');
+}
+
+
+async function loadPracticeQuestions() {
+  if (!currentEnrollment) return;
+  const { data, error } = await supabase
+    .from('questions')
+    .select('*,topics(name,certification,level)')
+    .eq('topics.certification', currentEnrollment.certification)
+    .eq('topics.level', currentEnrollment.level);
+  if (error) {
+    toast(error.message);
+    return;
+  }
+  practiceQuestions = (data || []).filter(q => q.topics);
+  if (!practiceQuestions.length) {
+    currentPracticeQuestion = null;
+    el('practiceQuestion').textContent = 'No practice questions are loaded for this track yet.';
+    el('practiceChoices').innerHTML = '';
+    el('practiceTopic').textContent = 'PRACTICE';
+    return;
+  }
+  chooseNextPracticeQuestion();
+}
+
+function masteryForTopic(topicId) {
+  return currentMastery.find(x => x.topic_id === topicId);
+}
+
+function chooseNextPracticeQuestion() {
+  if (!practiceQuestions.length) return;
+  const sorted = [...practiceQuestions].sort((a,b) => {
+    const ma = masteryForTopic(a.topic_id)?.mastery ?? 50;
+    const mb = masteryForTopic(b.topic_id)?.mastery ?? 50;
+    return ma - mb;
+  });
+  currentPracticeQuestion = sorted[Math.floor(Math.random() * Math.min(2, sorted.length))];
+  practiceStartedAt = Date.now();
+  practiceSupportUsed = false;
+  renderPracticeQuestion();
+}
+
+function renderPracticeQuestion() {
+  const q = currentPracticeQuestion;
+  if (!q) return;
+  el('practiceTopic').textContent = `${q.topics?.name || 'Topic'} · ${Math.round(Number(q.difficulty||0.5)*100)} difficulty`;
+  el('practiceQuestion').textContent = q.stem;
+  el('practiceChoices').innerHTML = (q.choices || []).map((choice,i) =>
+    `<button class="choice-btn" data-choice="${i}" type="button">${String.fromCharCode(65+i)}. ${choice}</button>`
+  ).join('');
+  el('practiceFeedback').className = 'feedback-box hidden';
+  el('practiceFeedback').textContent = '';
+  el('nextQuestionBtn').classList.add('hidden');
+  el('supportBtn').disabled = false;
+  document.querySelectorAll('[data-choice]').forEach(btn => btn.addEventListener('click', () => submitPracticeAnswer(Number(btn.dataset.choice))));
+  updatePracticeImpact(q.topic_id);
+}
+
+async function submitPracticeAnswer(selectedIndex) {
+  const q = currentPracticeQuestion;
+  if (!q) return;
+  document.querySelectorAll('[data-choice]').forEach(b => b.disabled = true);
+  const isCorrect = selectedIndex === q.correct_index;
+  const seconds = Math.max(1, Math.round((Date.now() - practiceStartedAt)/1000));
+
+  const { error } = await supabase.from('attempts').insert({
+    user_id: currentUser.id,
+    question_id: q.id,
+    selected_index: selectedIndex,
+    is_correct: isCorrect,
+    response_time_seconds: seconds,
+    support_used: practiceSupportUsed,
+    error_type: isCorrect ? null : (practiceSupportUsed ? 'conceptual' : 'conceptual')
+  });
+  if (error) {
+    toast(error.message);
+    document.querySelectorAll('[data-choice]').forEach(b => b.disabled = false);
+    return;
+  }
+
+  practiceAnswered++;
+  if (isCorrect) practiceCorrect++;
+
+  document.querySelectorAll('[data-choice]').forEach(btn => {
+    const i = Number(btn.dataset.choice);
+    if (i === q.correct_index) btn.classList.add('correct');
+    if (i === selectedIndex && !isCorrect) btn.classList.add('wrong');
+  });
+
+  const support = currentProfile?.support_language === 'pt'
+    ? (q.support_pt || q.explanation_en)
+    : currentProfile?.support_language === 'es'
+      ? (q.support_es || q.explanation_en)
+      : q.explanation_en;
+
+  const feedback = el('practiceFeedback');
+  feedback.className = `feedback-box ${isCorrect ? 'good' : 'bad'}`;
+  feedback.innerHTML = `<strong>${isCorrect ? 'Correct.' : 'Not quite.'}</strong><br>${q.explanation_en || ''}<br><br><span>${support || ''}</span>`;
+  el('nextQuestionBtn').classList.remove('hidden');
+  el('practiceSessionAccuracy').textContent = `${Math.round(practiceCorrect/practiceAnswered*100)}%`;
+  el('practiceCount').textContent = `${practiceAnswered} answered`;
+
+  await refreshAdaptiveData(q.topic_id);
+  await refreshMistakes();
+}
+
+async function refreshAdaptiveData(topicId) {
+  const [masteryRes, planRes] = await Promise.all([
+    supabase.from('topic_mastery').select('*,topics(name,certification,level)').eq('user_id',currentUser.id),
+    supabase.from('study_plan_items').select('*,topics(name)').eq('user_id',currentUser.id).eq('enrollment_id',currentEnrollment.id).order('scheduled_date').order('priority',{ascending:false})
+  ]);
+  if (!masteryRes.error) {
+    currentMastery = (masteryRes.data || []).filter(x => x.topics?.certification===currentEnrollment.certification && x.topics?.level===currentEnrollment.level);
+  }
+  if (!planRes.error) currentPlan = planRes.data || [];
+  renderDashboard();
+  renderMastery();
+  updatePracticeImpact(topicId);
+}
+
+function updatePracticeImpact(topicId) {
+  const m = masteryForTopic(topicId);
+  el('impactAttempts').textContent = m?.attempts_count ?? 0;
+  el('impactMastery').textContent = m ? `${Number(m.mastery).toFixed(0)}%` : 'New topic';
+  el('impactAccuracy').textContent = m ? `${Number(m.accuracy).toFixed(0)}%` : '—';
+  const pending = currentPlan.filter(x => x.topic_id === topicId && x.status === 'pending').sort((a,b)=>Number(b.priority)-Number(a.priority))[0];
+  el('impactPriority').textContent = pending ? `${Number(pending.priority).toFixed(0)}/100` : '—';
+}
+
+el('supportBtn').addEventListener('click', () => {
+  const q = currentPracticeQuestion;
+  if (!q) return;
+  practiceSupportUsed = true;
+  const text = currentProfile?.support_language === 'pt'
+    ? (q.support_pt || q.explanation_en)
+    : currentProfile?.support_language === 'es'
+      ? (q.support_es || q.explanation_en)
+      : q.explanation_en;
+  const feedback = el('practiceFeedback');
+  feedback.className = 'feedback-box';
+  feedback.textContent = text || 'No support text available for this question.';
+});
+
+el('nextQuestionBtn').addEventListener('click', chooseNextPracticeQuestion);
+
+function renderMastery() {
+  if (!el('masteryGrid')) return;
+  const byTopic = Object.fromEntries(currentMastery.map(x => [x.topic_id, x]));
+  el('masteryGrid').innerHTML = currentTopics.map(t => {
+    const m = byTopic[t.id];
+    const mastery = m ? Number(m.mastery) : 0;
+    const acc = m ? Number(m.accuracy) : 0;
+    const attempts = m?.attempts_count || 0;
+    let label = 'Not assessed';
+    if (attempts) {
+      label = mastery < 50 ? 'High priority' : mastery < 70 ? 'Developing' : mastery < 85 ? 'On track' : 'Maintenance';
+    }
+    return `<article class="mastery-card">
+      <div class="mastery-top">
+        <div><span class="eyebrow">${label}</span><h3>${t.name}</h3></div>
+        <div class="mastery-score">${attempts ? mastery.toFixed(0)+'%' : '—'}</div>
+      </div>
+      <p>${attempts ? attempts+' attempts recorded' : 'Answer practice questions to establish mastery.'}</p>
+      <div class="mastery-bar"><i style="width:${Math.max(0,Math.min(100,mastery))}%"></i></div>
+      <div class="mastery-details"><span>Accuracy ${attempts ? acc.toFixed(0)+'%' : '—'}</span><span>${attempts} attempts</span></div>
+    </article>`;
+  }).join('');
+}
+
+
+function flashProgressFor(cardId) {
+  return flashProgress.find(x => x.flashcard_id === cardId);
+}
+
+function dueFlashcards() {
+  const now = Date.now();
+  return flashcards.filter(card => {
+    const p = flashProgressFor(card.id);
+    return !p || !p.due_at || new Date(p.due_at).getTime() <= now;
+  });
+}
+
+function chooseNextFlashcard() {
+  const due = dueFlashcards();
+  currentFlashcard = due[0] || null;
+  renderFlashcards();
+}
+
+function renderFlashcards() {
+  if (!el('flashDueCount')) return;
+  const due = dueFlashcards();
+  el('flashDueCount').textContent = due.length;
+  el('flashReviewedCount').textContent = flashReviewedThisSession;
+
+  if (!currentFlashcard || !due.some(x => x.id === currentFlashcard.id)) {
+    currentFlashcard = due[0] || null;
+  }
+
+  if (!currentFlashcard) {
+    el('flashTopic').textContent = 'ALL CAUGHT UP';
+    el('flashSchedule').textContent = 'No cards due';
+    el('flashFront').textContent = flashcards.length ? 'You have completed the cards currently due.' : 'No flashcards are loaded for this track yet.';
+    el('flashBack').classList.add('hidden');
+    el('revealFlashBtn').classList.add('hidden');
+    el('flashRatingButtons').classList.add('hidden');
+    return;
+  }
+
+  const p = flashProgressFor(currentFlashcard.id);
+  el('flashTopic').textContent = currentFlashcard.topics?.name || 'Topic';
+  el('flashSchedule').textContent = p?.last_reviewed_at ? `Interval ${p.interval_days || 0}d` : 'New card';
+  el('flashFront').textContent = currentFlashcard.front_en;
+  el('flashBackText').textContent = currentFlashcard.back_en;
+
+  const support = currentProfile?.support_language === 'pt'
+    ? currentFlashcard.support_pt
+    : currentProfile?.support_language === 'es'
+      ? currentFlashcard.support_es
+      : '';
+  el('flashSupportText').textContent = support || '';
+  el('flashSupportText').classList.toggle('hidden', !support);
+
+  el('flashBack').classList.add('hidden');
+  el('revealFlashBtn').classList.remove('hidden');
+  el('flashRatingButtons').classList.add('hidden');
+}
+
+el('revealFlashBtn').addEventListener('click', () => {
+  if (!currentFlashcard) return;
+  el('flashBack').classList.remove('hidden');
+  el('revealFlashBtn').classList.add('hidden');
+  el('flashRatingButtons').classList.remove('hidden');
+});
+
+function nextInterval(rating, progress) {
+  const currentInterval = Number(progress?.interval_days || 0);
+  const reps = Number(progress?.repetitions || 0);
+  let ease = Number(progress?.ease_factor || 2.5);
+  let interval = 1;
+  let nextReps = reps;
+
+  if (rating === 'again') {
+    interval = 1;
+    nextReps = 0;
+    ease = Math.max(1.3, ease - 0.20);
+  } else if (rating === 'hard') {
+    interval = reps === 0 ? 2 : Math.max(2, Math.round(Math.max(1,currentInterval) * 1.2));
+    nextReps = reps + 1;
+    ease = Math.max(1.3, ease - 0.10);
+  } else if (rating === 'good') {
+    if (reps === 0) interval = 1;
+    else if (reps === 1) interval = 3;
+    else interval = Math.max(3, Math.round(Math.max(1,currentInterval) * ease));
+    nextReps = reps + 1;
+  } else {
+    interval = reps === 0 ? 4 : Math.max(4, Math.round(Math.max(1,currentInterval) * ease * 1.3));
+    nextReps = reps + 1;
+    ease = Math.min(3.5, ease + 0.15);
+  }
+  return { interval, reps: nextReps, ease: Number(ease.toFixed(2)) };
+}
+
+async function rateFlashcard(rating) {
+  if (!currentFlashcard) return;
+  const previous = flashProgressFor(currentFlashcard.id);
+  const next = nextInterval(rating, previous);
+  const now = new Date();
+  const due = new Date(now);
+  due.setDate(due.getDate() + next.interval);
+
+  const reviewRes = await supabase.from('flashcard_reviews').insert({
+    user_id: currentUser.id,
+    flashcard_id: currentFlashcard.id,
+    rating,
+    next_review_at: due.toISOString()
+  });
+  if (reviewRes.error) return toast(reviewRes.error.message);
+
+  const progressRes = await supabase.from('flashcard_progress').upsert({
+    user_id: currentUser.id,
+    flashcard_id: currentFlashcard.id,
+    repetitions: next.reps,
+    interval_days: next.interval,
+    ease_factor: next.ease,
+    due_at: due.toISOString(),
+    last_rating: rating,
+    last_reviewed_at: now.toISOString(),
+    updated_at: now.toISOString()
+  }, { onConflict:'user_id,flashcard_id' }).select().single();
+  if (progressRes.error) return toast(progressRes.error.message);
+
+  const updated = progressRes.data;
+  flashProgress = flashProgress.filter(x => x.flashcard_id !== updated.flashcard_id);
+  flashProgress.push(updated);
+  flashReviewedThisSession++;
+  toast(`Card scheduled in ${next.interval} day${next.interval===1?'':'s'}.`);
+  chooseNextFlashcard();
+}
+
+document.querySelectorAll('[data-flash-rating]').forEach(btn => {
+  btn.addEventListener('click', () => rateFlashcard(btn.dataset.flashRating));
+});
+
+async function refreshMistakes() {
+  const { data, error } = await supabase
+    .from('mistake_book_items')
+    .select('*,questions(stem,explanation_en,support_es,support_pt,topics(name,certification,level))')
+    .eq('user_id',currentUser.id)
+    .order('updated_at',{ascending:false});
+  if (error) return;
+  mistakeItems = (data || []).filter(x =>
+    x.questions?.topics?.certification===currentEnrollment.certification &&
+    x.questions?.topics?.level===currentEnrollment.level
+  );
+  renderMistakes();
+}
+
+function mistakeSupport(item) {
+  if (currentProfile?.support_language === 'pt') return item.questions?.support_pt || '';
+  if (currentProfile?.support_language === 'es') return item.questions?.support_es || '';
+  return '';
+}
+
+function renderMistakes() {
+  if (!el('mistakeList')) return;
+  const counts = {
+    open: mistakeItems.filter(x=>x.status==='open').length,
+    reviewing: mistakeItems.filter(x=>x.status==='reviewing').length,
+    resolved: mistakeItems.filter(x=>x.status==='resolved').length
+  };
+  el('mistakeOpenCount').textContent = counts.open;
+  el('mistakeReviewingCount').textContent = counts.reviewing;
+  el('mistakeResolvedCount').textContent = counts.resolved;
+
+  const filtered = mistakeFilter === 'all' ? mistakeItems : mistakeItems.filter(x => x.status === mistakeFilter);
+
+  if (!filtered.length) {
+    el('mistakeList').innerHTML = `<div class="mistake-empty"><div>
+      <strong>${mistakeFilter==='all' ? 'No mistakes recorded yet.' : 'Nothing in this status.'}</strong>
+      <p>Wrong practice answers will appear here automatically. Two successful recoveries can move a mistake to resolved.</p>
+    </div></div>`;
+    return;
+  }
+
+  el('mistakeList').innerHTML = filtered.map(item => {
+    const support = mistakeSupport(item);
+    return `<article class="mistake-card">
+      <div class="mistake-card-top">
+        <div>
+          <span class="mistake-topic">${item.questions?.topics?.name || 'Topic'}</span>
+          <h3 class="mistake-question">${item.questions?.stem || 'Question'}</h3>
+        </div>
+        <span class="status-chip ${item.status}">${item.status}</span>
+      </div>
+      <div class="mistake-stats">
+        <span>${item.wrong_count} wrong ${item.wrong_count===1?'attempt':'attempts'}</span>
+        <span>${item.correct_after_mistake} recovery ${item.correct_after_mistake===1?'answer':'answers'}</span>
+      </div>
+      <div class="mistake-explanation">${item.questions?.explanation_en || ''}${support ? `<br><br>${support}` : ''}</div>
+      <div class="mistake-note-row">
+        <input data-mistake-note-input="${item.question_id}" value="${escapeHtml(item.note || '')}" placeholder="Add your own note: why did I miss this?"/>
+        <button data-save-mistake-note="${item.question_id}" type="button">Save note</button>
+      </div>
+    </article>`;
+  }).join('');
+
+  document.querySelectorAll('[data-save-mistake-note]').forEach(btn => {
+    btn.addEventListener('click', () => saveMistakeNote(btn.dataset.saveMistakeNote));
+  });
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+async function saveMistakeNote(questionId) {
+  const input = document.querySelector(`[data-mistake-note-input="${questionId}"]`);
+  const note = input?.value.trim() || null;
+  const { error } = await supabase.from('mistake_book_items')
+    .update({note,updated_at:new Date().toISOString()})
+    .eq('user_id',currentUser.id)
+    .eq('question_id',questionId);
+  if (error) return toast(error.message);
+  const item = mistakeItems.find(x => x.question_id === questionId);
+  if (item) item.note = note;
+  toast('Mistake note saved.');
+}
+
+document.querySelectorAll('[data-mistake-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    mistakeFilter = btn.dataset.mistakeFilter;
+    document.querySelectorAll('[data-mistake-filter]').forEach(x => x.classList.toggle('active', x === btn));
+    renderMistakes();
+  });
+});
+
+function openSection(name) {
+  document.querySelectorAll('.dash-section').forEach(s=>s.classList.add('hidden'));
+  el(name+'Section').classList.remove('hidden');
+  document.querySelectorAll('.nav-link[data-section]').forEach(b=>b.classList.toggle('active',b.dataset.section===name));
+  if (name === 'practice' && !practiceQuestions.length) loadPracticeQuestions();
+  if (name === 'mastery') renderMastery();
+  if (name === 'flashcards') renderFlashcards();
+  if (name === 'mistakes') renderMistakes();
+}
+document.querySelectorAll('.nav-link[data-section]').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.section)));
+document.querySelectorAll('[data-open-section]').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.openSection)));
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') showView('authView');
+});
+
+renderLevelOptions();
+renderAvailability();
+boot();
+
+</script>
+</body>
+</html>
