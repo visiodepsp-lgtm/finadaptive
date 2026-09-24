@@ -467,6 +467,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 }
 .auth-dev-note strong{color:#5b2bbd}
 
+
+.google-auth-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  margin:14px 0 12px;padding:12px 16px;border:1px solid #ddd7e8;border-radius:13px;
+  background:#fff;color:#302a38;font:700 10px/1 Poppins,Arial,sans-serif;
+  cursor:pointer;transition:.18s ease;box-shadow:0 3px 10px rgba(62,30,132,.04)
+}
+.google-auth-btn:hover{border-color:#bca8e9;background:#faf8ff;transform:translateY(-1px)}
+.google-auth-btn:disabled{opacity:.6;cursor:wait;transform:none}
+.google-auth-btn svg{width:18px;height:18px;flex:0 0 18px}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:10px 0 14px;color:#9a93a4;font-size:8px;font-weight:600}
+.auth-divider:before,.auth-divider:after{content:"";height:1px;background:#eeeaf3;flex:1}
+.auth-divider span{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -524,6 +537,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{
           <button id="loginTab" class="tab active" type="button">Log in</button>
           <button id="signupTab" class="tab" type="button">Create account</button>
         </div>
+
+        <button id="googleAuthBtn" class="google-auth-btn" type="button" aria-label="Continue with Google">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41z"/>
+            <path fill="#34A853" d="M12 22c2.7 0 4.97-.9 6.62-2.43l-3.24-2.54c-.9.6-2.05.96-3.38.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.61A10 10 0 0 0 12 22z"/>
+            <path fill="#FBBC05" d="M6.39 13.86A6.01 6.01 0 0 1 6.08 12c0-.65.11-1.28.31-1.86V7.53H3.04A10 10 0 0 0 2 12c0 1.61.38 3.13 1.04 4.47l3.35-2.61z"/>
+            <path fill="#EA4335" d="M12 6.01c1.47 0 2.79.51 3.83 1.5l2.87-2.88C16.96 3 14.7 2 12 2a10 10 0 0 0-8.96 5.53l3.35 2.61C7.18 7.77 9.39 6.01 12 6.01z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <div class="auth-divider"><span>or continue with email</span></div>
 
         <form id="loginForm" class="auth-form">
           <label>Email
@@ -1019,6 +1044,35 @@ el('loginTab').addEventListener('click', () => {
 el('signupTab').addEventListener('click', () => {
   el('signupTab').classList.add('active'); el('loginTab').classList.remove('active');
   el('signupForm').classList.remove('hidden'); el('loginForm').classList.add('hidden'); clearMsg('authMessage');
+});
+
+el('googleAuthBtn').addEventListener('click', async () => {
+  clearMsg('authMessage');
+  const btn = el('googleAuthBtn');
+  const label = btn.querySelector('span');
+  const original = label.textContent;
+  try {
+    btn.disabled = true;
+    label.textContent = 'Opening Google…';
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/`
+      }
+    });
+    if (error) throw error;
+  } catch (err) {
+    console.error('Google sign-in error:', err);
+    btn.disabled = false;
+    label.textContent = original;
+    msg(
+      'authMessage',
+      /provider.*not.*enabled/i.test(err?.message || '')
+        ? 'Google sign-in is not enabled yet in Supabase.'
+        : (err?.message || 'Could not start Google sign-in.'),
+      'error'
+    );
+  }
 });
 
 el('signupForm').addEventListener('submit', async (e) => {
