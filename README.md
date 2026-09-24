@@ -13,3 +13,4 @@ Current test build: V6.2 hotfix.
 - Flashcards
 - Mistake Book
 - Vercel production hosting
+- Git-connected deployment workflow
