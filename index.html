@@ -522,6 +522,29 @@ button:focus-visible,input:focus-visible,select:focus-visible{
 @media(max-width:950px){.ai-layout{grid-template-columns:1fr}.ai-side-panel{order:-1}.ai-messages{max-height:none}}
 @media(max-width:620px){.ai-composer{grid-template-columns:1fr}.ai-message{max-width:94%}}
 
+
+/* Telegram Coach */
+.telegram-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.telegram-connect-card,.telegram-prefs-card{min-height:390px}
+.telegram-icon{width:52px;height:52px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(135deg,#23cbd0,#149aa0);color:#fff;font-size:13px;font-weight:800;margin-bottom:18px}
+.telegram-connect-card h3,.telegram-prefs-card h3{font-size:20px;margin:6px 0 9px}
+.telegram-connect-card>p{font-size:10px;color:var(--muted);line-height:1.7;max-width:520px}
+.telegram-actions{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 12px}
+.telegram-steps{margin-top:20px;display:grid;gap:10px}
+.telegram-steps div{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #f1edf5}
+.telegram-steps b{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:var(--cyan-soft);color:#137f85;font-size:9px}
+.telegram-steps span{display:flex;flex-direction:column}.telegram-steps strong{font-size:10px}.telegram-steps small{font-size:8px;color:#96909f}
+.telegram-status-pill{padding:8px 11px;border-radius:999px;background:#f3f0f6;color:#83798f;font-size:9px;font-weight:800}
+.telegram-status-pill.connected{background:#eaf8f3;color:#18845d}
+.telegram-pref-list{margin-top:14px}
+.telegram-pref-list label{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:13px 0;border-bottom:1px solid #f0edf4;cursor:pointer}
+.telegram-pref-list label>span{display:flex;flex-direction:column}.telegram-pref-list strong{font-size:10px}.telegram-pref-list small{font-size:8px;color:#99929f;margin-top:2px}
+.telegram-pref-list input{width:17px;height:17px;accent-color:var(--purple)}
+.telegram-time-field{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:18px 0}
+.telegram-time-field span{font-size:9px;font-weight:700;color:#716a79}
+.telegram-time-field input{border:1px solid var(--line);border-radius:10px;padding:9px 10px;font:600 9px Poppins,Arial,sans-serif}
+@media(max-width:850px){.telegram-layout{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -741,10 +764,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{
         <button class="nav-link" data-section="flashcards" type="button"><span>Flashcards</span></button>
         <button class="nav-link" data-section="mistakes" type="button"><span>Mistake Book</span></button>
         <button class="nav-link" data-section="ai" type="button"><span>AI Tutor</span></button>
+        <button class="nav-link" data-section="telegram" type="button"><span>Telegram Coach</span></button>
       </nav>
 
       <span class="sidebar-label coming-label">COMING NEXT</span>
-      <div class="future-feature"><span>Telegram Coach</span><small>soon</small></div>
+      <div class="future-feature"><span>Mock Exams</span><small>soon</small></div>
+      <div class="future-feature"><span>Analytics</span><small>soon</small></div>
 
       <div class="sidebar-spacer"></div>
 
@@ -775,6 +800,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{
         <button class="nav-link" data-section="flashcards" type="button">Cards</button>
         <button class="nav-link" data-section="mistakes" type="button">Mistakes</button>
         <button class="nav-link" data-section="ai" type="button">AI</button>
+        <button class="nav-link" data-section="telegram" type="button">TG</button>
       </nav>
 
       <!-- OVERVIEW -->
@@ -1036,6 +1062,59 @@ button:focus-visible,input:focus-visible,select:focus-visible{
         </div>
       </section>
 
+      <!-- TELEGRAM COACH -->
+      <section id="telegramSection" class="dash-section hidden">
+        <div class="section-title section-title-row">
+          <div>
+            <span class="eyebrow">STUDY NOTIFICATIONS</span>
+            <h2>Telegram Coach</h2>
+            <p>Connect your Telegram account for study reminders, due reviews and coaching nudges.</p>
+          </div>
+          <span id="telegramStatusPill" class="telegram-status-pill">Not connected</span>
+        </div>
+
+        <div class="telegram-layout">
+          <article class="panel telegram-connect-card">
+            <div class="telegram-icon">TG</div>
+            <span class="eyebrow">SECURE LINK</span>
+            <h3 id="telegramConnectTitle">Connect Telegram</h3>
+            <p id="telegramConnectText">Generate a private 15-minute connection link. After you press Start in Telegram, FinAdaptive will associate that chat only with your account.</p>
+
+            <div class="telegram-actions">
+              <button id="telegramConnectBtn" class="primary-btn" type="button">Connect Telegram</button>
+              <button id="telegramCheckBtn" class="ghost-btn" type="button">Check connection</button>
+            </div>
+
+            <div id="telegramNotice" class="message hidden"></div>
+
+            <div class="telegram-steps">
+              <div><b>1</b><span><strong>Generate link</strong><small>FinAdaptive creates a short-lived private token.</small></span></div>
+              <div><b>2</b><span><strong>Open Telegram</strong><small>Press Start in the FinAdaptive bot.</small></span></div>
+              <div><b>3</b><span><strong>Done</strong><small>Your chat ID is stored securely in your profile.</small></span></div>
+            </div>
+          </article>
+
+          <article class="panel telegram-prefs-card">
+            <span class="eyebrow">YOUR REMINDERS</span>
+            <h3>Notification preferences</h3>
+            <div class="telegram-pref-list">
+              <label><span><strong>Daily study plan</strong><small>Your planned sessions for the day</small></span><input id="tgDailyPlan" type="checkbox"/></label>
+              <label><span><strong>Flashcards due</strong><small>Remind me when reviews are waiting</small></span><input id="tgFlashcards" type="checkbox"/></label>
+              <label><span><strong>Mock reminders</strong><small>Upcoming or overdue mock exams</small></span><input id="tgMocks" type="checkbox"/></label>
+              <label><span><strong>Weekly report</strong><small>Mastery, consistency and progress recap</small></span><input id="tgWeekly" type="checkbox"/></label>
+              <label><span><strong>Inactivity reminder</strong><small>Nudge me after a study gap</small></span><input id="tgInactivity" type="checkbox"/></label>
+            </div>
+
+            <label class="telegram-time-field">
+              <span>Preferred reminder time</span>
+              <input id="tgPreferredTime" type="time" value="20:00"/>
+            </label>
+
+            <button id="telegramSavePrefsBtn" class="primary-btn" type="button">Save preferences</button>
+          </article>
+        </div>
+      </section>
+
     </div>
   </section>
 
@@ -1075,6 +1154,8 @@ let aiTutorConversationId = null;
 let aiTutorMode = 'ask';
 let aiTutorMessages = [];
 let aiTutorLoaded = false;
+let notificationPrefs = null;
+let telegramLoaded = false;
 
 function showView(id) {
   views.forEach(v => el(v).classList.toggle('hidden', v !== id));
@@ -1274,6 +1355,7 @@ async function signout() {
   await supabase.auth.signOut();
   currentUser=null; currentProfile=null; currentEnrollment=null; currentPlan=[]; currentTopics=[]; currentMastery=[]; flashcards=[]; flashProgress=[]; currentFlashcard=null; mistakeItems=[];
   aiTutorConversationId=null; aiTutorMessages=[]; aiTutorLoaded=false; aiTutorMode='ask';
+  notificationPrefs=null; telegramLoaded=false;
   showView('authView');
 }
 el('signoutBtn').addEventListener('click', signout);
@@ -2107,6 +2189,101 @@ el('aiTutorInput').addEventListener('keydown', e => {
   }
 });
 
+
+function renderTelegramCoach() {
+  const connected = Boolean(currentProfile?.telegram_chat_id);
+  el('telegramStatusPill').textContent = connected ? 'Connected' : 'Not connected';
+  el('telegramStatusPill').classList.toggle('connected', connected);
+  el('telegramConnectTitle').textContent = connected ? 'Telegram connected' : 'Connect Telegram';
+  el('telegramConnectText').textContent = connected
+    ? 'Your Telegram chat is linked to this FinAdaptive profile. You can change reminder preferences at any time.'
+    : 'Generate a private 15-minute connection link. After you press Start in Telegram, FinAdaptive will associate that chat only with your account.';
+  el('telegramConnectBtn').textContent = connected ? 'Reconnect Telegram' : 'Connect Telegram';
+
+  if (notificationPrefs) {
+    el('tgDailyPlan').checked = Boolean(notificationPrefs.daily_plan);
+    el('tgFlashcards').checked = Boolean(notificationPrefs.flashcards_due);
+    el('tgMocks').checked = Boolean(notificationPrefs.mock_reminders);
+    el('tgWeekly').checked = Boolean(notificationPrefs.weekly_report);
+    el('tgInactivity').checked = Boolean(notificationPrefs.inactivity_reminder);
+    el('tgPreferredTime').value = String(notificationPrefs.preferred_time || '20:00:00').slice(0,5);
+  }
+}
+
+async function loadTelegramCoach(force=false) {
+  if (telegramLoaded && !force) {
+    renderTelegramCoach();
+    return;
+  }
+
+  const [profile, prefsRes] = await Promise.all([
+    getProfile(currentUser.id),
+    supabase.from('notification_preferences').select('*').eq('user_id',currentUser.id).maybeSingle()
+  ]);
+
+  if (prefsRes.error) return toast(prefsRes.error.message);
+  currentProfile = profile;
+  notificationPrefs = prefsRes.data;
+  telegramLoaded = true;
+  renderTelegramCoach();
+}
+
+async function connectTelegram() {
+  clearMsg('telegramNotice');
+  const btn = el('telegramConnectBtn');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Generating link…';
+
+  try {
+    const {data,error} = await supabase.functions.invoke('telegram-link',{body:{}});
+    if (error) throw error;
+
+    if (data?.configured === false) {
+      msg('telegramNotice','Telegram infrastructure is ready. Create the FinAdaptive bot in BotFather and add its username/token to Supabase to activate the link.','');
+      return;
+    }
+
+    if (!data?.link) throw new Error('No Telegram link returned.');
+    msg('telegramNotice','Connection link generated. Press Start in Telegram, then return here and click Check connection.','success');
+    window.open(data.link,'_blank','noopener,noreferrer');
+  } catch (err) {
+    console.error('Telegram link error',err);
+    msg('telegramNotice','Could not generate the Telegram connection link.','error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+async function saveTelegramPreferences() {
+  const btn = el('telegramSavePrefsBtn');
+  btn.disabled = true;
+  const {error} = await supabase.from('notification_preferences').update({
+    daily_plan:el('tgDailyPlan').checked,
+    flashcards_due:el('tgFlashcards').checked,
+    mock_reminders:el('tgMocks').checked,
+    weekly_report:el('tgWeekly').checked,
+    inactivity_reminder:el('tgInactivity').checked,
+    preferred_time:el('tgPreferredTime').value + ':00',
+    updated_at:new Date().toISOString()
+  }).eq('user_id',currentUser.id);
+
+  btn.disabled = false;
+  if (error) return toast(error.message);
+  telegramLoaded = false;
+  await loadTelegramCoach(true);
+  toast('Telegram preferences saved.');
+}
+
+el('telegramConnectBtn').addEventListener('click',connectTelegram);
+el('telegramCheckBtn').addEventListener('click',async()=>{
+  telegramLoaded=false;
+  await loadTelegramCoach(true);
+  toast(currentProfile?.telegram_chat_id ? 'Telegram is connected.' : 'Telegram is not connected yet.');
+});
+el('telegramSavePrefsBtn').addEventListener('click',saveTelegramPreferences);
+
 function openSection(name) {
   document.querySelectorAll('.dash-section').forEach(s=>s.classList.add('hidden'));
   el(name+'Section').classList.remove('hidden');
@@ -2116,6 +2293,7 @@ function openSection(name) {
   if (name === 'flashcards') renderFlashcards();
   if (name === 'mistakes') renderMistakes();
   if (name === 'ai') loadAiTutor();
+  if (name === 'telegram') loadTelegramCoach();
 }
 document.querySelectorAll('.nav-link[data-section]').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.section)));
 document.querySelectorAll('[data-open-section]').forEach(btn=>btn.addEventListener('click',()=>openSection(btn.dataset.openSection)));
