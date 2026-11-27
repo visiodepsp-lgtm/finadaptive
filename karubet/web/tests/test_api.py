@@ -50,6 +50,35 @@ class ReadOnlyApiTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             api.history({"league":["1 OR 1=1"],"home":["A"],"away":["B"]})
 
+    def test_original_context_joins_by_exact_fixture_id(self):
+        original = [{
+            "fixture_id": 19722093,
+            "source_snapshot_date": "2026-11-22",
+            "context": {
+                "home":"Arsenal", "away":"Manchester City", "competition":"epl",
+                "home_recent":[{"opponent":"Newcastle United","result":"D"}],
+                "h2h_matches":[{"date":"2026-04-19","score":"2–1"}],
+                "h_gf_5": 1.4
+            }
+        }]
+        with patch.object(api,"get_json",return_value=original) as request:
+            data=api.contexts({"ids":["19722093"]})
+        self.assertEqual(data["count"],1)
+        self.assertEqual(data["items"][0]["context"]["home_recent"][0]["opponent"],
+                         "Newcastle United")
+        self.assertEqual(data["items"][0]["context"]["h_gf_5"],1.4)
+        self.assertEqual(data["snapshot_date"],"2026-11-22")
+        self.assertEqual(request.call_args[0][0],"karubet_fixture_context_original")
+        self.assertEqual(request.call_args[0][1]["fixture_id"],"in.(19722093)")
+
+    def test_context_input_is_strictly_limited(self):
+        with patch.object(api,"get_json") as db:
+            for ids in ("", "19722093);DROP TABLE matches", "abc",
+                        ",".join(["19722093"] * 81)):
+                with self.assertRaises(ValueError):
+                    api.contexts({"ids":[ids]})
+            db.assert_not_called()
+
     def test_unauthorized_table_is_blocked(self):
         with self.assertRaises(RuntimeError):
             # Will fail closed on missing server credentials before network.
