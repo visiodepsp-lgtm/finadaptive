@@ -1,11 +1,10 @@
-"""KARUBET 7.0 — read-only, password-gated API for Vercel.
+"""KARUBET 7.0 — read-only public match API for Vercel.
 
 Credentials never reach the browser or a static HTML file.
 Data source: private Supabase tables through server-side sb_secret_ API key.
 """
 from __future__ import annotations
 
-import hmac
 import json
 import os
 import re
@@ -169,7 +168,7 @@ class handler(BaseHTTPRequestHandler):
         payload = json.dumps(data, ensure_ascii=False, allow_nan=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Cache-Control", "no-store, private")
+        self.send_header("Cache-Control", "public, s-maxage=30, stale-while-revalidate=90")
         self.send_header("Pragma", "no-cache")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
@@ -179,15 +178,11 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_GET(self):
-        expected = os.getenv("KARUBET_ACCESS_TOKEN", "")
-        supabase_key = os.getenv("SUPABASE_SECRET_KEY", "")
-        if len(expected) < 20 or not supabase_key:
-            self._send(503, {"error": "BACKEND_NO_CONFIGURADO",
-                             "message": "Faltan las variables privadas de KARUBET en Vercel."})
-            return
-        provided = self.headers.get("Authorization", "")
-        if not hmac.compare_digest(provided, "Bearer " + expected):
-            self._send(401, {"error": "NO_AUTORIZADO", "message": "Código de acceso incorrecto."})
+        # API pública y estrictamente de solo lectura: sin token de acceso.
+        # La clave sb_secret_ sigue siendo exclusivamente una variable del servidor.
+        if not os.getenv("SUPABASE_SECRET_KEY", "").strip():
+            self._send(503, {"error":"BACKEND_NO_CONFIGURADO",
+                             "message":"Supabase no está configurado en el servidor."})
             return
         parsed = urllib.parse.urlparse(self.path)
         query = urllib.parse.parse_qs(parsed.query)
