@@ -1,0 +1,42 @@
+name: KARUBET - prueba real de conexion API
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/karubet-api-live-smoke.yml'
+      - 'karubet/web/api/data.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Leer Supabase con backend original sin mostrar registros ni secretos
+        run: |
+          python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+          spec=importlib.util.spec_from_file_location('karubet_data_api',Path('karubet/web/api/data.py'))
+          api=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(api)
+          fixtures=api.get_json('karubet_fixtures_2026', {'select':'fixture_id','limit':'1'})
+          predictions=api.get_json('karubet_model_outputs', {'select':'id','limit':'1'})
+          assert len(fixtures)==1, 'No se pudieron leer fixtures'
+          assert len(predictions)==1, 'No se pudieron leer probabilidades'
+          print('API lectura OK: fixtures y predicciones disponibles; ningún dato privado expuesto.')
+          PY
