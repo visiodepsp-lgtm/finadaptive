@@ -1,102 +1,104 @@
 #!/usr/bin/env python3
-"""Prueba de navegador REAL de Hoja 1 (sin claves ni Supabase).
-
-Sirve la web estática en localhost, abre el iframe clásico dentro del panel,
-inyecta una predicción sintética con el mismo formato del backend y valida
-Fixture, Top por liga y Analizar partido. Sólo testea presentación.
-"""
+"""KARUBET browser smoke sin iframe: visita la Hoja 1 como página completa,
+inyecta una respuesta del API sintética, comprueba los cuatro módulos y el
+enlace al Market Centre. No utiliza datos reales ni secretos."""
 import asyncio
 import json
 import pathlib
 import socket
 import subprocess
 import sys
-import time
-
 from playwright.async_api import async_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "test-output" / "classic-smoke.png"
-
-SAMPLE = {
-    "rows": [{
-        "fixture_id": 12345678, "competition": "serie-a",
-        "home": "Napoli", "away": "Inter", "dia": "2026-11-29", "hora": "09:00",
-        "hora_confirmada": True,
-        "lambda_h": 1.7, "lambda_a": 1.4,
-        "h2h_count": 8, "h2h_evidence": 1.2,
-        "ewma_pa": .52, "ewma_qpa": .21, "ewma_dpa": .08, "ewma_rem": .025,
-        "h2h_pa": .55, "h2h_qpa": .22, "h2h_dpa": .085, "h2h_rem": .027,
-        "original_pa": .50, "original_qpa": .20,
-        "original_dpa": .075, "original_rem": .023,
-        "h2h_matches": [], "home_recent": [], "away_recent": [],
-    }],
-    "meta": {"today": "2026-11-27", "fresh": True,
-             "asof": "2026-11-27 10:00 a. m.",
-             "source_date": "Supabase - KARUBET 6.3"},
-    "logos": {}, "league_logos": {},
+PREDICTION = {
+    "fixture_id": 12345678, "competition": "serie-a",
+    "home_team": "Napoli", "away_team": "Inter",
+    "kickoff_at": "2026-11-29T14:00:00+00:00",
+    "status": "unplayed", "phase": None,
+    "model": {
+        "model_version": "6.3",
+        "generated_at": "2026-11-27T15:00:00+00:00",
+        "metrics": {"lambda_home":1.7,"lambda_away":1.4,
+                    "h2h_count":8,"h2h_evidence":1.2},
+        "probabilities": {
+            "pa": .52, "qpa": .21, "dpa": .08, "rem": .025,
+            "original_pa": .50, "original_qpa": .20,
+            "original_dpa": .075, "original_rem": .023,
+            "ewma": {"pa": .52,"qpa": .21,"dpa": .08,"rem": .025},
+            "h2h": {"pa": .55,"qpa": .22,"dpa": .085,"rem": .027}
+        }
+    }
 }
-
 
 async def main():
     port = 8765
-    server = subprocess.Popen(
+    proc = subprocess.Popen(
         [sys.executable, "-m", "http.server", str(port),
          "--bind", "127.0.0.1", "--directory", str(ROOT)],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL
     )
     try:
-        # Wait for the HTTP server to start, without using network outside localhost.
         for _ in range(35):
             try:
-                with socket.create_connection(("127.0.0.1", port), timeout=.5):
+                with socket.create_connection(("127.0.0.1",port),timeout=.5):
                     break
             except OSError:
                 await asyncio.sleep(.2)
-        errors = []
+        errors=[]
         async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=True, args=["--no-sandbox"])
-            page = await browser.new_page(viewport={"width": 1450, "height": 900})
-            page.on("pageerror", lambda exc: errors.append(str(exc)))
-            response = await page.goto(f"http://127.0.0.1:{port}/", wait_until="networkidle")
-            assert response.status == 200, "No carga la página KARUBET"
-            await page.evaluate("""() => {
-                document.getElementById('loginPanel').hidden=true;
-                document.getElementById('workspace').hidden=false;
-            }""")
-            classic = page.frame_locator("#classicFrame")
-            await classic.locator("#content").wait_for(timeout=10000)
-            await page.evaluate("""payload => {
-                document.getElementById("classicFrame").contentWindow.postMessage(
-                    {type:"KARUBET_CLASSIC_DATA",payload:payload},location.origin
-                );
-            }""", SAMPLE)
-            await classic.locator("#content").get_by_text("Napoli", exact=False).first.wait_for(timeout=15000)
-            fixture_text = await classic.locator("#content").inner_text()
-            assert "Inter" in fixture_text
-            assert "52.0%" in fixture_text, fixture_text[:1000]
-            print("Fixture + cuotas de probabilidad PA sinteticas: OK")
-            await classic.locator("#nav button[data-view='rank']").click()
-            rank = await classic.locator("#content").inner_text()
-            assert "Napoli" in rank
+            browser = await pw.chromium.launch(headless=True,args=["--no-sandbox"])
+            context = await browser.new_context(viewport={"width":1450,"height":900})
+            await context.add_init_script(
+                "sessionStorage.setItem('karubet_access','TEST_TOKEN_LONG_ENOUGH_987654321')")
+            page = await context.new_page()
+            page.on("pageerror",lambda e: errors.append(str(e)))
+            async def mock_data(route):
+                from urllib.parse import urlparse,parse_qs
+                kind=parse_qs(urlparse(route.request.url).query).get("kind",[""])[0]
+                if kind=="fixtures":
+                    data={"items":[PREDICTION],"count":1,"model_count":1,
+                          "asof":"2026-11-27T15:00:00+00:00",
+                          "page_full":False,"days":210}
+                elif kind=="markets":
+                    data={"items":[],"count":0,"asof":"2026-11-27T15:00:00+00:00"}
+                else:
+                    data={"items":[]}
+                await route.fulfill(status=200,content_type="application/json",
+                                    body=json.dumps(data))
+            await page.route("**/api/data?*",mock_data)
+            response=await page.goto(
+                f"http://127.0.0.1:{port}/classic.html",wait_until="networkidle")
+            assert response.status==200,"Hoja 1 no responde"
+            assert await page.locator("iframe").count()==0,"No debe existir ningún iframe"
+            await page.locator("#content").get_by_text("Napoli",exact=False).first.wait_for(timeout=15000)
+            text=await page.locator("#content").inner_text()
+            assert "Inter" in text and "52.0%" in text,text[:1100]
+            print("Hoja 1 completa, fixtures y PA original: OK")
+            await page.locator("#nav button[data-view='rank']").click()
+            assert "Napoli" in await page.locator("#content").inner_text()
             print("Top por liga: OK")
-            await classic.locator("#content [data-id]").first.click()
-            detail = await classic.locator("#content").inner_text()
+            await page.locator("#content [data-id]").first.click()
+            detail=await page.locator("#content").inner_text()
             assert "Napoli" in detail and "Inter" in detail
             print("Análisis por partido: OK")
-            await page.evaluate("document.getElementById('classicFrame').scrollIntoView()")
-            OUT.parent.mkdir(parents=True, exist_ok=True)
-            await page.screenshot(path=str(OUT), full_page=True)
-            assert not errors, "Error JS: " + json.dumps(errors)[:1200]
+            OUT.parent.mkdir(parents=True,exist_ok=True)
+            await page.screenshot(path=str(OUT),full_page=True)
+            assert not errors, "Error JavaScript: "+json.dumps(errors)[:1200]
+            link=page.get_by_role("link",name="02 · Market Centre")
+            assert await link.count()==1
+            await link.click()
+            await page.wait_for_url("**/?tab=market",timeout=12000)
+            await page.locator("#marketPage").wait_for(state="visible",timeout=15000)
+            assert await page.locator("iframe").count()==0
+            print("Navegación a Market Centre: OK")
             await browser.close()
-            print("Match Centre 6.3 en iframe del mismo origen: OK")
     finally:
-        server.terminate()
-        try:
-            server.wait(timeout=3)
-        except subprocess.TimeoutExpired:
-            server.kill()
+        proc.terminate()
+        try:proc.wait(timeout=3)
+        except subprocess.TimeoutExpired:proc.kill()
 
 
-if __name__ == "__main__":
+if __name__=="__main__":
     asyncio.run(main())
