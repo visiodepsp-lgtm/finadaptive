@@ -1,0 +1,33 @@
+name: KARUBET - validar web 7.0
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'karubet/web/**'
+      - '.github/workflows/karubet-web-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validar JavaScript, HTML y funciones Python
+        run: |
+          node --check karubet/web/app.js
+          python -m py_compile karubet/web/api/data.py
+          python -c "import json; json.load(open('karubet/web/vercel.json',encoding='utf-8')); print('Vercel config OK')"
+      - name: Probar API offline sin secretos
+        run: python -m unittest discover -s karubet/web/tests -p 'test_*.py' -v
