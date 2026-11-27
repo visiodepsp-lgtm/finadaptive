@@ -1,6 +1,6 @@
 """Pruebas locales del filtro de calidad; no hacen llamadas a red."""
 import unittest
-from collector import revisar_filas, probabilidades_mercado, completar_fecha
+from collector import revisar_filas, probabilidades_mercado, completar_fecha, filtrar_ventana_prematch
 from report_movements import calcular_movimientos
 
 
@@ -80,6 +80,29 @@ class PruebasCalidad(unittest.TestCase):
         alertas = calcular_movimientos([segunda, primera])
         self.assertTrue(any(a["lado"] == "L" and a["descripcion"] == "CUOTA_SUBE"
                             and a["cambio_probabilidad_pp"] == -2.5 for a in alertas))
+
+
+    def test_ventana_4_dias_filtra_sin_borrar_historico(self):
+        base = {
+            "league_code": "24", "home_team": "A", "away_team": "B",
+            "quality_flags": {"league_not_confirmed": False},
+        }
+        def partido(kickoff):
+            return dict(base, kickoff_at=kickoff)
+        fecha = "2026-11-27T00:00:00+00:00"
+        filas = [
+            partido("2026-11-27T00:00:00+00:00"), # comenzó, no guardar
+            partido("2026-11-27T00:01:00+00:00"), # sí guardar
+            partido("2026-12-01T00:00:00+00:00"), # día 4 exacto, sí guardar
+            partido("2026-12-01T00:01:00+00:00"), # fuera de ventana
+            partido(None),
+        ]
+        filtradas, motivos = filtrar_ventana_prematch(filas, fecha)
+        self.assertEqual(len(filtradas), 2)
+        self.assertEqual(motivos["inicio_ya_comenzado"], 1)
+        self.assertEqual(motivos["fuera_ventana_4_dias"], 1)
+        self.assertEqual(motivos["inicio_sin_fecha_verificada"], 1)
+        self.assertEqual(len(filas), 5)  # la función no elimina datos preexistentes
 
     def test_rechazar_margen_inverosimil(self):
         validas, resumen = revisar_filas([fila(cuotas=(1.03, 1.04, 1.05))], [])
