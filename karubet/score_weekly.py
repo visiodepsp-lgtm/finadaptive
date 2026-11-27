@@ -47,7 +47,7 @@ def get_private(name: str) -> bytes:
     request = urllib.request.Request(
         base + "/storage/v1/object/authenticated/" + BUCKET + "/" + name,
         headers={
-            "apikey": secret, "Authorization": "Bearer " + secret,
+            "apikey": secret,  # clave opaca: NO enviarla como Bearer JWT
             "User-Agent": "karubet-original-model-6.3",
         },
     )
