@@ -222,21 +222,120 @@ for(const id of ['start','end','league','event','k','model'])$(id).onchange=rend
 $('week').onclick=week; $('season').onclick=entireSeason;
 week();
   })();
-  if(window.ResizeObserver){
-    const obs=new ResizeObserver(()=>window.parent.postMessage({type:"KARUBET_CLASSIC_HEIGHT",height:document.documentElement.scrollHeight},location.origin));
-    obs.observe(document.body);
-  }
-  window.parent.postMessage({type:"KARUBET_CLASSIC_HEIGHT",height:document.documentElement.scrollHeight},location.origin);
 }
-window.addEventListener("message",(event)=>{
-  if(event.origin!==location.origin || event.source!==window.parent || !event.data || event.data.type!=="KARUBET_CLASSIC_DATA")return;
-  const payload=event.data.payload;
-  if(!payload||!Array.isArray(payload.rows)||!payload.meta)return;
-  startClassic(payload);
-});
+
+/* Vista independiente: no utiliza marcos ni mensajes con una ventana padre.
+   Reutiliza el token corto de la sesión de KARUBET, consultando solo la API privada. */
+const CLASSIC_ACCESS = "karubet_access";
+
+function classicDateParts(value) {
+  const d = new Date(value);
+  if (!Number.isFinite(d.getTime())) return {date:"",hour:""};
+  const items = new Intl.DateTimeFormat("en-GB",{
+    timeZone:"America/Lima",year:"numeric",month:"2-digit",day:"2-digit",
+    hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+  }).formatToParts(d);
+  const x = Object.fromEntries(items.map(y=>[y.type,y.value]));
+  return {date:x.year+"-"+x.month+"-"+x.day, hour:x.hour+":"+x.minute};
+}
+
+async function classicFetchFixtures(token, offset) {
+  const u = new URL("/api/data", location.origin);
+  for(const [k,v] of Object.entries({kind:"fixtures",days:"210",limit:"250",offset:String(offset)}))
+    u.searchParams.set(k,v);
+  const res = await fetch(u.pathname+u.search,{
+    cache:"no-store",headers:{"Authorization":"Bearer "+token}
+  });
+  if (res.status===401) {
+    sessionStorage.removeItem(CLASSIC_ACCESS);
+    location.replace("/?return=classic");
+    throw new Error("Sesión vencida. Vuelve a ingresar desde KARUBET.");
+  }
+  if(!res.ok){
+    let body={};
+    try{body=await res.json();}catch{}
+    throw new Error(body.message||"Supabase no está disponible (HTTP "+res.status+").");
+  }
+  return res.json();
+}
+function classicViewRow(f){
+  const p=f.model.probabilities||{},m=f.model.metrics||{};
+  const dt=classicDateParts(f.kickoff_at);
+  const row={
+    fixture_id:f.fixture_id,competition:f.competition,
+    home:f.home_team,away:f.away_team,dia:dt.date,hora:dt.hour,
+    hora_confirmada:dt.hour!=="",
+    lambda_h:m.lambda_home??null,lambda_a:m.lambda_away??null,
+    h2h_count:m.h2h_count??0,h2h_evidence:m.h2h_evidence??null,
+    home_recent:[],away_recent:[],h2h_matches:[],
+    original_pa:p.original_pa??p.pa??null,
+    original_qpa:p.original_qpa??p.qpa??null,
+    original_dpa:p.original_dpa??p.dpa??null,
+    original_rem:p.original_rem??p.rem??null
+  };
+  for(const model of ["ewma","h2h"]){
+    for(const ev of ["pa","qpa","dpa","rem"])
+      row[model+"_"+ev]=p[model]?.[ev]??null;
+  }
+  return row;
+}
+async function loadClassicStandalone(){
+  const token=sessionStorage.getItem(CLASSIC_ACCESS);
+  if(!token || token.length<20) {location.replace("/?return=classic");return;}
+  const status=document.getElementById("classicLiveStatus");
+  const content=document.getElementById("content");
+  status.textContent="Conectando con Supabase...";
+  content.textContent="Consultando probabilidades originales de KARUBET 6.3...";
+  try{
+    const fixtures=[];
+    let offset=0,latest=null;
+    for(let page=0;page<12;page++){
+      const data=await classicFetchFixtures(token,offset);
+      if(!Array.isArray(data.items))throw new Error("Formato de fixture inválido");
+      fixtures.push(...data.items);
+      offset+=data.items.length;
+      status.textContent="Leyendo fixtures: "+fixtures.length+"...";
+      if(!data.page_full||!data.items.length)break;
+    }
+    const rows=[];
+    for(const f of fixtures){
+      if(!f.model || !f.kickoff_at)continue;
+      rows.push(classicViewRow(f));
+      if(f.model.generated_at && (!latest||f.model.generated_at>latest))
+        latest=f.model.generated_at;
+    }
+    const today=classicDateParts(new Date().toISOString()).date;
+    const updated=latest?new Intl.DateTimeFormat("es-PE",{
+      timeZone:"America/Lima",dateStyle:"medium",timeStyle:"short"
+    }).format(new Date(latest)):"sin recálculo";
+    // El motor visual clásico se conserva íntegro; solo cambia el origen del dataset.
+    startClassic({
+      rows,logos:{},league_logos:{},
+      meta:{today,asof:updated,source_date:"Supabase · KARUBET 6.3",
+            fresh:Boolean(latest)}
+    });
+    status.textContent="Supabase conectado · "+rows.length+" predicciones · "+updated;
+    status.classList.add("ready");
+  }catch(error){
+    status.textContent="No se pudieron cargar las probabilidades";
+    content.replaceChildren();
+    const p=document.createElement("p");
+    p.className="classic-error";
+    p.textContent=error.message||"Error de conexión";
+    const a=document.createElement("a");
+    a.href="/";
+    a.textContent="Volver a KARUBET";
+    content.append(p,a);
+  }
+}
 document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll('img[data-karubet-logo]').forEach(img=>{
     if(window.KARUBET_ORIGINAL_LOGO) img.src=window.KARUBET_ORIGINAL_LOGO;
   });
-  window.parent.postMessage({type:"KARUBET_CLASSIC_READY"},location.origin);
+  document.getElementById("classicLogout")?.addEventListener("click",()=>{
+    sessionStorage.removeItem(CLASSIC_ACCESS);
+    location.assign("/");
+  });
+  document.getElementById("classicRefresh")?.addEventListener("click",()=>location.reload());
+  loadClassicStandalone();
 });
