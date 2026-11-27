@@ -84,7 +84,7 @@ EXTRACT_1X2_JS = r"""
         const midTxt=norm(midBox?.innerText || midBox?.textContent || '');
         const hasDraw=/\b(empate|draw|x)\b/.test(midTxt) || /\bempate\b/.test(norm(text));
         const key=a.key+'|'+b.key;
-        const dateMatch=text.match(/\b(\d{1,2}\/\d{1,2})\s*[·\-.]?\s*(\d{1,2}:\d{2})\b/);
+        const dateMatch=text.match(/\b(\d{1,2}\/\d{1,2})\s*[·•\-.]?\s*(\d{1,2}:\d{2})\b/);
         const candidate={local:a.name,visitante:b.name,L:trio[0].odd,E:trio[1].odd,V:trio[2].odd,
           fecha_hora_texto:dateMatch?dateMatch[1]+' '+dateMatch[2]:'',
           doble_verificacion_empate:hasDraw,
