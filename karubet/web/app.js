@@ -158,8 +158,12 @@ async function login() {
     await loadFixtures(true);
     sessionStorage.setItem("karubet_access", state.token);
     toggleAccess(true);
-    loadMarkets();
-    loadAllClassic().catch(e=>{ $("classicCount").textContent="Error cargando todo el fixture: "+e.message; });
+    if(new URLSearchParams(location.search).get("tab")==="market"){
+      setTab("market");
+      loadMarkets();
+    }else{
+      location.assign("/classic.html");
+    }
   } catch (e) {
     $("loginFeedback").textContent = e.message || "No se pudo conectar.";
     setStatus("Sin conexión", false);
@@ -175,7 +179,8 @@ function logout() {
   setStatus("Acceso privado", false);
 }
 function setTab(tab) {
-  const market = tab === "market";
+  if(tab !== "market"){ location.assign("/classic.html"); return; }
+  const market = true;
   $("probPage").hidden = market;
   $("marketPage").hidden = !market;
   $("tabProbs").classList.toggle("active", !market);
@@ -451,12 +456,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('img[data-karubet-logo]').forEach(img=>{
     if(window.KARUBET_ORIGINAL_LOGO) img.src=window.KARUBET_ORIGINAL_LOGO;
   });
-  $("classicReload").addEventListener("click",()=>{
-    $("classicCount").textContent="Actualizando probabilidades originales...";
-    loadFixtures(true).then(()=>loadAllClassic()).then(()=>resetClassicFrame())
-      .catch(e=>{ $("classicCount").textContent="No se pudo actualizar: "+e.message; });
-  });
-  $("tabProbs").addEventListener("click",()=>setTab("probs"));
+  $("classicReload").addEventListener("click",()=>location.assign("/classic.html"));
+  $("tabProbs").addEventListener("click",()=>location.assign("/classic.html"));
   $("tabMarket").addEventListener("click",()=>setTab("market"));
   $("refreshFixtures").addEventListener("click",()=>loadFixtures(true).catch(e=>{setStatus("Error de lectura",false);alert(e.message);}));
   $("refreshMarkets").addEventListener("click",()=>loadMarkets());
@@ -482,8 +483,12 @@ document.addEventListener("DOMContentLoaded", () => {
   if (state.token) {
     loadFixtures(true).then(()=>{
       toggleAccess(true);
-      loadMarkets();
-      loadAllClassic().catch(e=>{ $("classicCount").textContent="Error cargando todo el fixture: "+e.message; });
+      if(new URLSearchParams(location.search).get("tab")==="market"){
+        setTab("market");
+        loadMarkets();
+      }else{
+        location.replace("/classic.html");
+      }
     }).catch(()=>{
       state.token="";
       sessionStorage.removeItem("karubet_access");
