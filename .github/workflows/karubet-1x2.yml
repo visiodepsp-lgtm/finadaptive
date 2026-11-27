@@ -2,6 +2,11 @@ name: KARUBET - cuotas 1X2 cada 10 min
 
 on:
   # Cada 10 minutos en UTC. Nueva ventana de comprobación iniciando en el minuto 56 UTC (27 Nov 2026).
+  push:
+    branches: [main]
+    paths:
+      - 'karubet/catalogo.py'
+      - 'karubet/collector.py'
   schedule:
     - cron: '6,16,26,36,46,56 * * * *'
   workflow_dispatch:
@@ -21,14 +26,14 @@ concurrency:
 
 jobs:
   collect:
-    name: Leer cuotas de 5 ligas
+    name: Leer cuotas de 6 ligas (Bundesliga incluida)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       # Las ejecuciones programadas guardan datos; las manuales son dry-run por defecto.
-      PERSIST: ${{ github.event_name == 'schedule' || inputs.save_to_db }}
+      PERSIST: ${{ github.event_name == 'schedule' || github.event_name == 'push' || inputs.save_to_db }}
     steps:
       - name: Obtener codigo
         uses: actions/checkout@v4

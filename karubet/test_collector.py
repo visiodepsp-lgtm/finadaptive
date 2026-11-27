@@ -57,6 +57,36 @@ class PruebasCalidad(unittest.TestCase):
         self.assertEqual(resumen["sin_fecha"], 0)
         self.assertEqual(resumen["categoria_no_confirmada"], 0)
 
+    def test_bundesliga_primera_tiene_categoria_confirmada(self):
+        r = fila(liga="110", home="Werder Bremen",
+                 away="Borussia Monchengladbach", fecha="27/11 • 14:30",
+                 cuotas=(1.68, 4.17, 4.41))
+        r["raw_excerpt"] = (
+            "27/11 • 14:30 Bundesliga Werder Bremen Borussia Monchengladbach "
+            "1.68 Werder Bremen 4.17 Empate 4.41 Borussia Monchengladbach"
+        )
+        validas, resumen = revisar_filas(
+            [r], [{"eventos_con_1x2": 1, "estado": "CUOTAS_1X2_DETECTADAS"}],
+            "2026-11-27T18:00:00+00:00")
+        self.assertEqual(len(validas), 1)
+        self.assertEqual(resumen["categoria_no_confirmada"], 0)
+        self.assertEqual(validas[0]["kickoff_at"], "2026-11-27T19:30:00+00:00")
+        aptas, _ = filtrar_ventana_prematch(validas, "2026-11-27T18:00:00+00:00")
+        self.assertEqual(len(aptas), 1)
+
+    def test_no_confundir_segunda_bundesliga_con_primera(self):
+        r = fila(liga="110", home="Werder Bremen",
+                 away="Borussia Monchengladbach", fecha="27/11 • 14:30")
+        r["raw_excerpt"] = "27/11 • 14:30 2ª Bundesliga Werder Bremen 3.40 Empate 4.00"
+        validas, resumen = revisar_filas(
+            [r], [{"eventos_con_1x2": 1, "estado": "CUOTAS_1X2_DETECTADAS"}],
+            "2026-11-27T18:00:00+00:00")
+        self.assertEqual(len(validas), 1)
+        self.assertTrue(validas[0]["quality_flags"]["league_not_confirmed"])
+        aptas, motivos = filtrar_ventana_prematch(validas, "2026-11-27T18:00:00+00:00")
+        self.assertEqual(aptas, [])
+        self.assertEqual(motivos["competicion_no_verificada"], 1)
+
     def test_fecha_ya_normalizada_con_separador_punto(self):
         r = fila(liga="25", fecha="08/12 · 12:45")
         r["raw_excerpt"] = "08/12 • 12:45 Ligue 1 Brest Paris FC 3.30 Empate 3.40"

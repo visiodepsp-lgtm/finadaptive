@@ -13,7 +13,7 @@ const LEAGUES = {
   "epl": "Premier League", "la-liga": "La Liga", "serie-a": "Serie A",
   "bundesliga": "Bundesliga", "ligue-1": "Ligue 1", "ucl": "Champions League",
   "25": "Ligue 1", "74": "Serie A", "24": "Premier League",
-  "38": "La Liga", "125": "Champions League"
+  "38": "La Liga", "110": "Bundesliga", "125": "Champions League"
 };
 
 function escapeHTML(x) {

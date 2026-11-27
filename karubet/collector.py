@@ -199,7 +199,7 @@ DATE_WEB_RE = re.compile(
 )
 EXPECTED_COMPETITIONS = {
     "25": "Ligue 1", "74": "Serie A", "24": "Premier League",
-    "38": "La Liga", "125": "Champions League",
+    "38": "La Liga", "125": "Champions League", "110": "Bundesliga",
 }
 
 
@@ -249,7 +249,13 @@ def revisar_filas(filas: list[dict], diagnosticos: list[dict], capturado_utc: st
     for f in filas:
         completar_fecha(f, capturado_utc)
         etiqueta_esperada = EXPECTED_COMPETITIONS.get(f["league_code"])
-        liga_confirmada = bool(etiqueta_esperada and etiqueta_esperada.casefold() in (f.get("raw_excerpt") or "").casefold())
+        extracto = f.get("raw_excerpt") or ""
+        liga_confirmada = bool(etiqueta_esperada and etiqueta_esperada.casefold() in extracto.casefold())
+        if f["league_code"] == "110":
+            # "Bundesliga" debe ser 1ª división de Alemania, nunca 2ª Bundesliga.
+            segunda = r"(?:\b2\s*[ªº.]?\s*Bundesliga\b|\bBundesliga\s*2\b)"
+            liga_confirmada = bool(re.search(r"\bBundesliga\b", extracto, re.I)
+                                   and not re.search(segunda, extracto, re.I))
         pareja = (normaliza(f["home_team"]), normaliza(f["away_team"]))
         if pareja in solapadas:
             rechazadas["partido_en_multiples_categorias"] += 1

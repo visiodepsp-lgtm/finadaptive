@@ -102,3 +102,16 @@ garantía de puntualidad). El servidor evita enviar otra solicitud si detecta
 una ejecución reciente, para no duplicar cuotas. El estado `ENVIADA` no
 implica captura terminada: se confirma solo al observar snapshots más nuevos
 en Supabase.
+
+
+## Bundesliga
+- La primera Bundesliga de Alemania se encontró directamente en Apuesta Total:
+  `/es-pe/spbkv3/sports/1/category?region=54&league=110`.
+- El recolector consulta **seis** competiciones (incluidas Bundesliga y UCL).
+- En Market Centre el identificador de Bundesliga es `110`, con su insignia y
+  escudos. Se exige confirmación explícita de la etiqueta "Bundesliga" y se
+  rechaza "2ª Bundesliga" para evitar mezclar categorías.
+- Los partidos aparecen en la Watchlist **solo cuando haya cuotas 1X2 verificadas
+  y guardadas en Supabase**. No se inventan cuotas ni capturas previas.
+- El workflow registra las cuotas automáticamente al actualizar el catálogo,
+  además de conservar el cron; esto permite probar el alta de la liga.
