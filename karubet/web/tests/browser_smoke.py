@@ -96,6 +96,11 @@ async def main():
             )
             assert any("league_premier-league.png" in u for u in urls),urls
             assert any("league_ligue-1.png" in u for u in urls),urls
+            await page.wait_for_function("""
+                () => [...document.querySelectorAll('#leagueTabs .league-crest img')]
+                  .every(image => image.complete && image.naturalWidth > 0)
+            """,timeout=20000)
+            print("Los cinco logos de liga descargan y son visibles en Chromium")
             print("Insignias de Premier, LaLiga, Serie A, Bundesliga y Ligue 1: OK")
 
             await page.locator("#nav button[data-view='rank']").click()
