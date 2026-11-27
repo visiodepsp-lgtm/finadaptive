@@ -101,6 +101,27 @@ function setTab(tab) {
   $("tabMarket").classList.toggle("active", market);
   $("tabProbs").setAttribute("aria-selected", String(!market));
   $("tabMarket").setAttribute("aria-selected", String(market));
+  if (market && state.selectedFixture) syncLinkedMarket();
+}
+/* La unión es intencionalmente estricta: nunca emparejar solo por nombre. */
+async function syncLinkedMarket() {
+  const fixture = state.selectedFixture;
+  if (!fixture || !state.markets.length) return;
+  try {
+    const data = await request("linked", {fixture_id: fixture.fixture_id});
+    if (fixture !== state.selectedFixture || !data.linked) return;
+    const match = state.markets.find(m => (data.items || []).some(link =>
+      String(link.odds_league_code) === String(m.league_code) &&
+      link.odds_home_team === m.home_team &&
+      link.odds_away_team === m.away_team &&
+      m.kickoff_at && Math.abs(
+        new Date(m.kickoff_at).getTime() - new Date(fixture.kickoff_at).getTime()
+      ) <= 3 * 60 * 60 * 1000
+    ));
+    if (match) selectMarket(match);
+  } catch {
+    // Si la vinculación no está disponible, conservamos la selección manual.
+  }
 }
 async function loadFixtures(reset=false) {
   if (reset) {
@@ -354,8 +375,13 @@ document.addEventListener("DOMContentLoaded", () => {
     renderHistory();
   }));
   if (state.token) {
-    request("fixtures",{days:210,limit:250,offset:0}).then(()=>{
-      toggleAccess(true); loadFixtures(true); loadMarkets();
-    }).catch(()=>{state.token="";sessionStorage.removeItem("karubet_access");});
+    loadFixtures(true).then(()=>{
+      toggleAccess(true);
+      loadMarkets();
+    }).catch(()=>{
+      state.token="";
+      sessionStorage.removeItem("karubet_access");
+      toggleAccess(false);
+    });
   }
 });
