@@ -22,7 +22,7 @@
       <div class="fresh"><span>FUENTE</span><strong>Supabase · KARUBET</strong><small id="freshStatus">Esperando conexión</small></div>
     </div>
 
-    <div class="login-panel" id="loginPanel">
+    <div class="login-panel" id="loginPanel" hidden>
       <div class="login-icon">🔐</div>
       <div><h2>Acceso privado KARUBET</h2><p class="muted">Introduce el código de acceso de este panel. La clave de Supabase nunca se descarga en el navegador.</p></div>
       <form id="loginForm"><label for="accessToken">Código de acceso</label><div class="login-line"><input id="accessToken" autocomplete="off" type="password" placeholder="Tu código KARUBET" required minlength="20"><button class="primary" type="submit">Conectar <span aria-hidden="true">→</span></button></div></form>
@@ -68,28 +68,59 @@
         </div>
       </section>
 
-      <section id="marketPage" role="tabpanel" hidden>
-        <div class="kpis">
-          <div class="kpi"><span>MERCADOS OBSERVADOS</span><strong id="marketMatches">—</strong><small>Cuotas con captura verificada</small></div>
-          <div class="kpi"><span>FRECUENCIA OBJETIVO</span><strong>15 min</strong><small>GitHub Actions · puede retrasarse</small></div>
-          <div class="kpi"><span>VENTANA DE CAPTURA</span><strong>96 h</strong><small>Antes del inicio</small></div>
-          <div class="kpi"><span>ESTADO DE SEÑALES</span><strong class="smallnum" id="modelSignalState">EN VALIDACIÓN</strong><small>Sin recomendaciones no calibradas</small></div>
+      <section id="marketPage" class="trading-terminal" role="tabpanel" hidden>
+        <div class="terminal-mast">
+          <div class="terminal-mast-title"><span class="terminal-mark">K<span>7</span> / MERCADOS</span><strong>MARKET CENTRE</strong><small>MONITOR PREPARTIDO · 1X2 · Apuesta Total</small></div>
+          <div class="terminal-mast-actions"><span class="live-led"><i></i> HISTÓRICO DE CUOTAS</span><button class="ghost" id="refreshMarkets" type="button">↻ SINCRONIZAR</button></div>
         </div>
-
-        <div class="section-title"><div><p class="eyebrow">HOJA 02</p><h2>Market Centre · Evolución de cuotas</h2><p>Prioridad Local y Visitante; Empate también se registra. Las cuotas son de Apuesta Total.</p></div><button class="ghost" id="refreshMarkets">↻ Actualizar</button></div>
-        <div class="market-grid">
-          <div class="panel listpanel"><div class="panelhead"><strong>Partidos con cuotas</strong><small id="marketCount">Cargando...</small></div><div id="marketList" class="matchlist"><div class="empty">Consulta de mercados pendiente.</div></div></div>
-          <div class="panel marketdetail">
-            <div class="market-head"><div><p class="eyebrow">SERIE PREPARTIDO</p><h3 id="marketName">Selecciona un partido</h3><span class="smallmuted" id="marketMeta">No se han seleccionado cuotas.</span></div><span class="tag" id="capturedAt">Sin captura</span></div>
-            <div class="price-row"><button data-side="L" class="price active" type="button"><small>LOCAL</small><strong id="quoteL">—</strong></button><button data-side="E" class="price" type="button"><small>EMPATE</small><strong id="quoteE">—</strong></button><button data-side="V" class="price" type="button"><small>VISITANTE</small><strong id="quoteV">—</strong></button></div>
-            <div class="rolling-tools"><span>Rolling</span><div class="segmented" id="rollingGroup"><button data-roll="3">3</button><button data-roll="6" class="active">6</button><button data-roll="12">12</button><button data-roll="24">24</button></div><small>Capturas, no horas</small></div>
-            <div class="graph" id="chartArea"><div class="empty">La evolución aparecerá cuando exista historial de al menos dos capturas.</div></div>
-            <div class="graph-legend"><span><i class="legend-price"></i>Cuota</span><span><i class="legend-avg"></i>Media móvil</span><span><i class="legend-band"></i>Bandas ±2σ</span></div>
-            <div class="stats" id="rollingStats"><div><small>MÁXIMO</small><strong>—</strong></div><div><small>MÍNIMO</small><strong>—</strong></div><div><small>CAMBIO ÚLTIMA CAPTURA</small><strong>—</strong></div><div><small>VOLATILIDAD ROLLING</small><strong>—</strong></div></div>
-            <div class="signal" id="decision"><span class="signal-tag">SIN SEÑAL FIABLE</span><p>Aún no hay un modelo de timing validado. La acción provisional es NO ENTRAR hasta comprobar los movimientos contra resultados futuros.</p></div>
-            <div class="history-wrap"><h4>Observaciones recientes</h4><div id="historyTable" class="empty slim">Sin historial disponible.</div></div>
-          </div>
+        <div class="terminal-statusbar">
+          <span><i class="terminal-pip"></i> <b id="marketMatches">—</b> MERCADOS</span>
+          <span>REFRESCO PROGRAMADO <b>15 MIN</b></span>
+          <span>VENTANA <b>96H</b></span>
+          <span class="terminal-signal-label">MOTOR TIMING <b id="modelSignalState">EN VALIDACIÓN</b></span>
         </div>
+        <div class="terminal-layout">
+          <aside class="terminal-watchlist">
+            <div class="terminal-section-head"><strong>WATCHLIST</strong><span>01 / PARTIDOS</span></div>
+            <div class="terminal-filters">
+              <label for="marketLeague">LIGA</label>
+              <select id="marketLeague"><option value="">Todas las ligas</option><option value="24">Premier League</option><option value="38">La Liga</option><option value="74">Serie A</option><option value="25">Ligue 1</option><option value="125">Champions League</option></select>
+              <label for="marketSearch">EQUIPO · BÚSQUEDA PREDICTIVA</label>
+              <input id="marketSearch" type="search" list="marketSuggestions" placeholder="Napoli, Inter, Arsenal…" autocomplete="off" spellcheck="false">
+              <datalist id="marketSuggestions"></datalist>
+              <div id="marketCount" class="market-counter">Consultando datos…</div>
+            </div>
+            <div class="watchlist-heading"><span>PARTIDO / FECHA</span><span>LOCAL</span><span>EMP.</span><span>VISITA</span></div>
+            <div id="marketList" class="terminal-marketlist" role="list"><div class="empty">Cargando cuotas verificadas…</div></div>
+          </aside>
+          <section class="terminal-main-chart" aria-label="Terminal gráfico">
+            <div class="terminal-chart-header">
+              <div><p class="eyebrow">SERIE HISTÓRICA · PREMATCH</p><h2 id="marketName">Selecciona un partido</h2><span class="smallmuted" id="marketMeta">Fuente: Apuesta Total · zona horaria Perú</span></div>
+              <div class="terminal-last"><small>ÚLTIMO SNAPSHOT</small><span id="capturedAt">Sin captura</span></div>
+            </div>
+            <div class="terminal-quotes" role="group" aria-label="Mercado 1X2">
+              <button data-side="L" class="price active" type="button"><small>1 · LOCAL</small><strong id="quoteL">—</strong><span>SEGUIR LOCAL</span></button>
+              <button data-side="E" class="price" type="button"><small>X · EMPATE</small><strong id="quoteE">—</strong><span>SEGUIR EMPATE</span></button>
+              <button data-side="V" class="price" type="button"><small>2 · VISITANTE</small><strong id="quoteV">—</strong><span>SEGUIR VISITA</span></button>
+            </div>
+            <div class="terminal-graph-toolbar">
+              <div><strong>PRECIO HISTÓRICO</strong><small>Cuotas decimales · línea temporal</small></div>
+              <div class="rolling-tools"><span>MA / BANDA</span><div class="segmented" id="rollingGroup"><button data-roll="3">3</button><button data-roll="6" class="active">6</button><button data-roll="12">12</button><button data-roll="24">24</button></div><small>snapshots</small></div>
+            </div>
+            <div class="graph" id="chartArea"><div class="empty">El gráfico aparecerá con las capturas verificadas.</div></div>
+            <div class="graph-legend"><span><i class="legend-price"></i> Cuota observada</span><span><i class="legend-avg"></i> Rolling MA</span><span><i class="legend-band"></i> Canal ±2σ</span><span id="crosshairReadout">Desliza sobre la curva para inspeccionar</span></div>
+          </section>
+          <aside class="terminal-analysis">
+            <div class="terminal-section-head"><strong>CUANTITATIVO</strong><span>02 / SEÑALES</span></div>
+            <div class="terminal-insight-label">PANEL DE DECISIÓN</div>
+            <div class="signal" id="decision"><span class="signal-tag">SIN SEÑAL FIABLE</span><p>El motor de timing aún necesita validación fuera de muestra.</p></div>
+            <div class="terminal-insight-label">ESTADÍSTICAS DE LA VENTANA</div>
+            <div class="stats" id="rollingStats"><div><small>MÁXIMO</small><strong>—</strong></div><div><small>MÍNIMO</small><strong>—</strong></div><div><small>Δ ÚLTIMO</small><strong>—</strong></div><div><small>VOLATILIDAD</small><strong>—</strong></div></div>
+            <div class="terminal-explain"><strong>METODOLOGÍA</strong><p>La media rolling y las bandas describen movimientos pasados. No pronostican el máximo futuro sin backtesting.</p></div>
+          </aside>
+        </div>
+        <section class="terminal-tape"><div class="terminal-section-head"><strong>TIME & SALES · HISTORIAL 1X2</strong><span>03 / CAPTURAS</span></div><div class="history-wrap"><div id="historyTable" class="empty slim">Sin historial disponible.</div></div></section>
+        <div class="terminal-foot">KARUBET QUANT MARKET · DATOS HISTÓRICOS OBSERVADOS · NO ES UNA CASA DE APUESTAS · LAS CUOTAS PUEDEN CAMBIAR ENTRE CAPTURAS</div>
       </section>
       <footer>KARUBET 7.0 · Probabilidades deportivas ≠ precios de mercado · Solo análisis prepartido · Los indicadores no garantizan ganancias.</footer>
     </section>
