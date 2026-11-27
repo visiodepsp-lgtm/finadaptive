@@ -12,6 +12,10 @@ function startClassic(payload) {
   (function(){
 const payload=window.__karubetClassicPayload,data=payload.rows, meta=payload.meta;
 const logos=payload.logos||{}, leagueLogos=payload.league_logos||{};
+const leagueForTeam=new Map();
+for(const match of data){for(const team of [match.home,match.away]){
+  if(team&&!leagueForTeam.has(team))leagueForTeam.set(team,match.competition);
+}}
 const lg={'epl':'Premier League','la-liga':'LaLiga','serie-a':'Serie A','bundesliga':'Bundesliga','ligue-1':'Ligue 1'},
       ev={pa:'PA',qpa:'Quasi Doble PA',dpa:'Doble PA',rem:'Remontada'};
 const $=id=>document.getElementById(id);
@@ -79,7 +83,7 @@ document.addEventListener('pointerdown',e=>{if(!$('teamSearch').contains(e.targe
 const event=()=> $('event').value,k=()=>Number($('k').value);
 function hashColor(str){let h=0;for(let i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;const hue=h%360;const hue2=(hue+35)%360;return [`hsl(${hue} 70% 42%)`,`hsl(${hue2} 75% 55%)`];}
 function initials(name){const clean=(name||'').replace(/\b(?:FC|CF|AC|SC|SV|AS|RC|CD|UD|US|SSC)\b/gi,'').replace(/[^A-Za-zÀ-ÿ0-9 ]/g,'').trim();const parts=clean.split(/\s+/).filter(Boolean);if(parts.length===0)return 'FC';if(parts.length===1)return parts[0].slice(0,3).toUpperCase();return (parts[0][0]+parts[1][0]+(parts[2]?.[0]||'')).toUpperCase();}
-function crest(name, league=false){const cls=league?'league-crest':'crest';const ids=league?leagueLogos:logos;const key=league?(Object.keys(lg).find(k=>lg[k]===name)||name):name;const urls=ids[key]||[];const url=urls[0];return `<span class="${cls}"><span class="initials">${esc(initials(name))}</span>${url?`<img alt="" loading="lazy" referrerpolicy="no-referrer" src="${esc(url)}" data-alt="${esc(urls[1]||'')}" onerror="if(this.dataset.alt){const next=this.dataset.alt;this.dataset.alt='';this.src=next}else{this.remove()}">`:''}</span>`}
+function crest(name, league=false){const cls=league?'league-crest':'crest';const ids=league?leagueLogos:logos;const key=league?(Object.keys(lg).find(k=>lg[k]===name)||name):name;const urls=ids[key]||[];const url=(!league&&window.KARUBET_TEAM_CREST?.(name,leagueForTeam.get(name)))||urls[0];return `<span class="${cls}"><span class="initials">${esc(initials(name))}</span>${url?`<img alt="" loading="lazy" referrerpolicy="no-referrer" src="${esc(url)}" data-alt="${esc(urls[1]||'')}" onerror="if(this.dataset.alt){const next=this.dataset.alt;this.dataset.alt='';this.src=next}else{this.remove()}">`:''}</span>`}
 function modelLabel(v){return v==='ewma'?'Forma actual':v==='h2h'?'Forma + historial':'Referencia';}
 function filt(){const mode=$('model').value;for(const r of data){for(const e of Object.keys(ev)){r[e]=r[mode+'_'+e];r['fair_'+e]=r[e]>0?1/r[e]:null}}const q=clubQuery();return data.filter(r=>r.dia>=$('start').value&&r.dia<=$('end').value&&($('league').value==='all'||$('league').value===r.competition)&&(!q||(selectedClub?clubNorm(r.home)===clubNorm(selectedClub.name)||clubNorm(r.away)===clubNorm(selectedClub.name):clubMatch(r.home,q)||clubMatch(r.away,q))))}
 function sorted(a,rev=false){return [...a].sort((x,y)=>(rev?1:-1)*(x[event()]-y[event()])||x.dia.localeCompare(y.dia)||x.hora.localeCompare(y.hora))}
@@ -224,9 +228,7 @@ week();
   })();
 }
 
-/* Vista independiente: no utiliza marcos ni mensajes con una ventana padre.
-   Reutiliza el token corto de la sesión de KARUBET, consultando solo la API privada. */
-const CLASSIC_ACCESS = "karubet_access";
+/* Vista pública de solo lectura; nunca se entrega la clave de Supabase al navegador. */
 
 function classicDateParts(value) {
   const d = new Date(value);
@@ -239,18 +241,11 @@ function classicDateParts(value) {
   return {date:x.year+"-"+x.month+"-"+x.day, hour:x.hour+":"+x.minute};
 }
 
-async function classicFetchFixtures(token, offset) {
+async function classicFetchFixtures(offset) {
   const u = new URL("/api/data", location.origin);
   for(const [k,v] of Object.entries({kind:"fixtures",days:"210",limit:"250",offset:String(offset)}))
     u.searchParams.set(k,v);
-  const res = await fetch(u.pathname+u.search,{
-    cache:"no-store",headers:{"Authorization":"Bearer "+token}
-  });
-  if (res.status===401) {
-    sessionStorage.removeItem(CLASSIC_ACCESS);
-    location.replace("/?return=classic");
-    throw new Error("Sesión vencida. Vuelve a ingresar desde KARUBET.");
-  }
+  const res = await fetch(u.pathname+u.search,{cache:"no-store"});
   if(!res.ok){
     let body={};
     try{body=await res.json();}catch{}
@@ -280,9 +275,7 @@ function classicViewRow(f){
   return row;
 }
 async function loadClassicStandalone(){
-  const token=sessionStorage.getItem(CLASSIC_ACCESS);
-  if(!token || token.length<20) {location.replace("/?return=classic");return;}
-  const status=document.getElementById("classicLiveStatus");
+   const status=document.getElementById("classicLiveStatus");
   const content=document.getElementById("content");
   status.textContent="Conectando con Supabase...";
   content.textContent="Consultando probabilidades originales de KARUBET 6.3...";
@@ -290,7 +283,7 @@ async function loadClassicStandalone(){
     const fixtures=[];
     let offset=0,latest=null;
     for(let page=0;page<12;page++){
-      const data=await classicFetchFixtures(token,offset);
+      const data=await classicFetchFixtures(offset);
       if(!Array.isArray(data.items))throw new Error("Formato de fixture inválido");
       fixtures.push(...data.items);
       offset+=data.items.length;
@@ -332,10 +325,10 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.querySelectorAll('img[data-karubet-logo]').forEach(img=>{
     if(window.KARUBET_ORIGINAL_LOGO) img.src=window.KARUBET_ORIGINAL_LOGO;
   });
-  document.getElementById("classicLogout")?.addEventListener("click",()=>{
-    sessionStorage.removeItem(CLASSIC_ACCESS);
-    location.assign("/");
-  });
+  document.getElementById("classicLogout")?.addEventListener("click",()=>location.assign("/?tab=market"));
   document.getElementById("classicRefresh")?.addEventListener("click",()=>location.reload());
+  document.addEventListener("error",event=>{
+    if(event.target instanceof HTMLImageElement && event.target.closest(".crest")) event.target.remove();
+  },true);
   loadClassicStandalone();
 });
