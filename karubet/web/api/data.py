@@ -16,14 +16,28 @@ from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler
 
 
+class BackendDiagnostic(RuntimeError):
+    """Diagnóstico público sin exponer claves, consultas ni datos sensibles."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
+
 def get_json(table: str, params: dict) -> list:
-    base = os.getenv("SUPABASE_URL", "").rstrip("/")
-    secret = os.getenv("SUPABASE_SECRET_KEY", "")
+    base = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+    secret = os.getenv("SUPABASE_SECRET_KEY", "").strip()
     u = urllib.parse.urlparse(base)
     if u.scheme != "https" or not u.hostname or not u.hostname.endswith(".supabase.co"):
-        raise RuntimeError("SUPABASE_URL no está configurada")
+        raise BackendDiagnostic(
+            "SUPABASE_URL_INVALIDA",
+            "Revisa SUPABASE_URL en Vercel: debe ser la URL HTTPS del proyecto KARUBET, sin comillas.",
+        )
     if not secret.startswith("sb_secret_"):
-        raise RuntimeError("SUPABASE_SECRET_KEY no está configurada")
+        raise BackendDiagnostic(
+            "SUPABASE_SECRET_KEY_INVALIDA",
+            "La clave privada SUPABASE_SECRET_KEY en Vercel debe comenzar por sb_secret_.",
+        )
     if table not in ("karubet_fixtures_2026", "karubet_model_outputs",
                      "karubet_odds_1x2", "karubet_fixture_odds_links"):
         raise ValueError("Tabla no autorizada")
@@ -36,8 +50,27 @@ def get_json(table: str, params: dict) -> list:
         with urllib.request.urlopen(req, timeout=25) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as error:
-        # Never reflect Supabase service-role messages into the web browser.
-        raise RuntimeError("Supabase devolvió HTTP " + str(error.code)) from None
+        # El código HTTP basta para diagnosticar; nunca mostrar cuerpos ni cabeceras.
+        if error.code in (401, 403):
+            raise BackendDiagnostic(
+                "SUPABASE_ACCESO_RECHAZADO",
+                "Supabase rechazó la clave privada (HTTP " + str(error.code) +
+                "). Revisa SUPABASE_SECRET_KEY y el proyecto KARUBET en Vercel.",
+            ) from None
+        if error.code == 404:
+            raise BackendDiagnostic(
+                "SUPABASE_API_NO_DISPONIBLE",
+                "La API de Supabase devolvió HTTP 404. Revisa SUPABASE_URL y Data API.",
+            ) from None
+        raise BackendDiagnostic(
+            "SUPABASE_ERROR_HTTP",
+            "Supabase devolvió HTTP " + str(error.code) + ". Revisa Runtime Logs en Vercel.",
+        ) from None
+    except urllib.error.URLError:
+        raise BackendDiagnostic(
+            "SUPABASE_SIN_CONEXION",
+            "El servidor no pudo establecer conexión con Supabase. Revisa URL y logs.",
+        ) from None
 
 
 def fixtures(query: dict) -> dict:
@@ -174,9 +207,14 @@ class handler(BaseHTTPRequestHandler):
         except ValueError as exc:
             self._send(400, {"error": "PARAMETROS_INVALIDOS", "message": str(exc)})
             return
-        except Exception:
+        except BackendDiagnostic as exc:
+            self._send(502, {"error": exc.code, "message": str(exc)})
+            return
+        except Exception as exc:
+            # Sólo registramos tipo de excepción, jamás claves o datos del request.
+            print("KARUBET_API: error inesperado " + type(exc).__name__)
             self._send(502, {"error": "LECTURA_NO_DISPONIBLE",
-                             "message": "No se pudo consultar la base. Revisar la configuración o registros del servidor."})
+                             "message": "Error interno de lectura. Revisa Runtime Logs de Vercel."})
             return
         self._send(200, result)
 
