@@ -312,11 +312,15 @@ async function loadMarkets() {
   $("marketCount").textContent = "Consultando...";
   try {
     const data = await request("markets");
+    const before = state.selectedMarket;
     state.markets = data.items || [];
     $("marketMatches").textContent = state.markets.length;
-    $("marketCount").textContent = state.markets.length + " mercados";
-    renderMarkets();
-    if (!state.selectedMarket && state.markets.length) selectMarket(state.markets[0]);
+    $("marketCount").textContent = state.markets.length + " mercados · lectura " + when(data.asof);
+    const match = before && state.markets.find(m =>
+      m.league_code===before.league_code && m.home_team===before.home_team &&
+      m.away_team===before.away_team && m.kickoff_at===before.kickoff_at);
+    if (match || state.markets.length) selectMarket(match || state.markets[0]);
+    else {state.selectedMarket=null; renderMarkets();}
   } catch (e) {
     $("marketCount").textContent = "No disponible";
     $("marketList").innerHTML = '<div class="empty">' + escapeHTML(e.message) + '</div>';
@@ -449,6 +453,11 @@ document.addEventListener("DOMContentLoaded", () => {
   $("tabMarket").addEventListener("click",()=>setTab("market"));
   $("refreshFixtures").addEventListener("click",()=>loadFixtures(true).catch(e=>{setStatus("Error de lectura",false);alert(e.message);}));
   $("refreshMarkets").addEventListener("click",()=>loadMarkets());
+  // El servidor registra cada 15m. La interfaz revisa novedades cada 2m
+  // mientras el usuario tenga visible la Hoja 2, sin recargar la página.
+  setInterval(()=>{
+    if(state.token && !document.hidden && !$("marketPage").hidden) loadMarkets();
+  },120000);
   $("loadMore").addEventListener("click",()=>loadFixtures(false).catch(e=>{alert(e.message);}));
   $("daysSelect").addEventListener("change",()=>loadFixtures(true).catch(e=>alert(e.message)));
   $("matchSearch").addEventListener("input",renderFixtures);
