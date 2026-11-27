@@ -18,7 +18,7 @@ import unicodedata
 import urllib.error
 import urllib.request
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import urlparse
@@ -399,6 +399,40 @@ def guardar_resultados(carpeta: Path, filas: list[dict], diags: list[dict], resu
             file.write("\nLos snapshots de mercado no son probabilidades del modelo KARUBET.\n")
 
 
+def filtrar_ventana_prematch(filas: list[dict], capturado: str, horizonte_dias: int = 4) -> tuple[list[dict], dict]:
+    """Sólo partidos verificados que comenzarán durante los próximos N días.
+
+    No borra ningún histórico existente: simplemente deja de tomar snapshots
+    tras el inicio del partido. El código de liga web debe estar verificado.
+    """
+    ahora = datetime.fromisoformat(capturado)
+    if ahora.tzinfo is None:
+        ahora = ahora.replace(tzinfo=timezone.utc)
+    limite = ahora + timedelta(days=horizonte_dias)
+    aptas = []
+    descartes = Counter()
+    for fila in filas:
+        flags = fila.get("quality_flags", {})
+        if flags.get("league_not_confirmed"):
+            descartes["competicion_no_verificada"] += 1
+            continue
+        if not fila.get("kickoff_at"):
+            descartes["inicio_sin_fecha_verificada"] += 1
+            continue
+        inicio = datetime.fromisoformat(fila["kickoff_at"])
+        if inicio.tzinfo is None:
+            descartes["inicio_sin_zona_horaria"] += 1
+            continue
+        if inicio <= ahora:
+            descartes["inicio_ya_comenzado"] += 1
+            continue
+        if inicio > limite:
+            descartes["fuera_ventana_4_dias"] += 1
+            continue
+        aptas.append(fila)
+    return aptas, dict(descartes)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default="karubet/output")
@@ -413,28 +447,16 @@ def main():
     validas, resumen = revisar_filas(filas, diagnosticos, capturado)
     resumen["capturado_utc"] = capturado
     resumen["modo"] = "PERSISTIR_SUPABASE" if args.persist else "SOLO_DIAGNOSTICO"
-    # Los snapshots productivos son PREPARTIDO: no mezclar con precios in-play.
-    # Si una fila está incompleta, conservarla en el reporte pero excluirla de Supabase.
-    aptas = []
-    desde = datetime.fromisoformat(capturado)
-    descartes = Counter()
-    for fila in validas:
-        flags = fila.get("quality_flags", {})
-        if flags.get("league_not_confirmed"):
-            descartes["competicion_no_verificada"] += 1
-            continue
-        if not fila.get("kickoff_at"):
-            descartes["inicio_sin_fecha_verificada"] += 1
-            continue
-        if datetime.fromisoformat(fila["kickoff_at"]) <= desde:
-            descartes["inicio_ya_comenzado"] += 1
-            continue
-        aptas.append(fila)
+    # Capturar únicamente partidos de las próximas 96 horas.
+    # Los partidos que arrancaron dejan de recibir snapshots, pero se conserva
+    # su serie histórica íntegra para backtesting sin sesgo de supervivencia.
+    aptas, descartes = filtrar_ventana_prematch(validas, capturado, horizonte_dias=4)
+    resumen["ventana_proximos_dias"] = 4
     resumen["partidos_aptos_prepartido"] = len(aptas)
-    resumen["descartados_para_bd"] = dict(descartes)
+    resumen["descartados_para_bd"] = descartes
     if descartes:
         resumen["alertas"].append(
-            f"{sum(descartes.values())} filas retenidas en diagnostico, pero no guardadas en BD."
+            f"{sum(descartes.values())} filas fuera de ventana o sin verificar: sólo diagnóstico."
         )
     guardar_resultados(carpeta, validas, diagnosticos, resumen)
     print(json.dumps(resumen, ensure_ascii=False, indent=2), flush=True)
