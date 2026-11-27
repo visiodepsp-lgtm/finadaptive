@@ -36,6 +36,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: karubet/requirements.txt
+      - name: Reusar Chromium descargado
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-karubet-playwright-chromium-1.56.0
       - name: Instalar dependencias
         run: |
           python -m pip install -r karubet/requirements.txt
