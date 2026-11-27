@@ -53,6 +53,9 @@ jobs:
           else
             python karubet/collector.py --out karubet/output
           fi
+      - name: Comparar cuotas con capturas previas y generar alertas
+        if: ${{ env.PERSIST == 'true' }}
+        run: python karubet/report_movements.py
       - name: Descargar diagnosticos y cuotas como artifact
         if: ${{ always() && (github.event_name == 'workflow_dispatch' || failure()) }}
         uses: actions/upload-artifact@v4
