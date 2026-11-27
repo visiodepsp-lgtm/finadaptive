@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KARUBET · Match Centre 6.3 — Vista original conectada</title>
+<style>
+:root{--bg:#07140d;--bg2:#0d2016;--panel:#10261a;--card:#123222;--line:#245b3b;--soft:#1b4a31;--text:#f5fff7;--muted:#b7d6c0;--gold:#ffd166;--lime:#79f2a3;--red:#ff7f7f;--blue:#70c7ff;--shadow:0 18px 40px rgba(0,0,0,.25)}
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:radial-gradient(circle at top,#13311f 0%,#07140d 48%,#06110b 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);background-size:40px 40px;opacity:.18;pointer-events:none}
+main{max-width:1380px;margin:auto;padding:24px 18px 36px;position:relative;z-index:1}
+.hero{display:block;margin-bottom:18px}
+.hero-card,.status-card,.section,.metric,.goal-card{background:linear-gradient(180deg, rgba(18,50,34,.95), rgba(12,30,21,.98));border:1px solid rgba(121,242,163,.18);border-radius:22px;box-shadow:var(--shadow)}
+.hero-card{padding:24px 26px;position:relative;overflow:hidden}
+.hero-card::after{content:'⚽';position:absolute;right:18px;top:14px;font-size:76px;opacity:.08}
+.brand-row{display:flex;align-items:center;gap:14px;margin-bottom:10px}
+.brand-ball{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%, #fff 0 16%, #1e4d33 17% 100%);color:#123;font-size:24px;box-shadow:0 0 0 6px rgba(255,255,255,.03)}
+.kicker{display:inline-flex;align-items:center;gap:8px;background:rgba(255,209,102,.12);border:1px solid rgba(255,209,102,.28);color:#ffe29a;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+h1{margin:0;font-size:42px;line-height:1.02;letter-spacing:-.03em}
+.sub{margin:10px 0 0;color:var(--muted);font-size:15px;line-height:1.6;max-width:860px}
+.goal-box{margin-top:18px;padding:14px 16px;border-radius:16px;background:linear-gradient(90deg, rgba(121,242,163,.12), rgba(112,199,255,.10));border:1px solid rgba(121,242,163,.24)}
+.goal-box b{color:#fff}
+.status-card{padding:18px 18px 16px}
+.status-card h3{margin:0 0 10px;font-size:17px}
+.status-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.status-item{padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.status-item small{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
+.status-item strong{font-size:15px}
+.event-legend{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.mini{padding:10px 12px;border-radius:14px;background:#0d2016;border:1px solid rgba(255,255,255,.06);font-size:12px;color:var(--muted)}
+.mini b{display:block;color:#fff;margin-bottom:4px;font-size:13px}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:16px 0 18px}
+label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:12px;min-width:120px}
+select,input,button{font:inherit;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#112619;color:var(--text);padding:11px 12px}
+button{cursor:pointer;transition:.18s ease}
+button:hover{transform:translateY(-1px);border-color:rgba(121,242,163,.45)}
+button.primary{background:linear-gradient(90deg,#79f2a3,#52d88b);color:#09351f;font-weight:800;border:0}
+button.secondary{background:#102c1d}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+nav button{background:#10271b}
+nav button.active{background:linear-gradient(90deg,#79f2a3,#70c7ff);color:#082817;font-weight:800;border:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px}
+.metric{padding:18px}
+.metric small{color:var(--muted);display:block;font-size:12px;margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+.metric strong{font-size:31px;display:block}
+.section{padding:18px;margin-bottom:16px}
+.section h2{margin:0 0 14px;font-size:22px;letter-spacing:-.02em}
+.section-header{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
+.section-header p{margin:0;color:var(--muted)}
+.tablewrap{overflow:auto;border-radius:16px;border:1px solid rgba(255,255,255,.08)}
+table{width:100%;border-collapse:collapse;min-width:920px;background:rgba(0,0,0,.08)}
+th,td{padding:13px 12px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#cfe8d6;background:rgba(255,255,255,.04)}
+tr:hover td{background:rgba(255,255,255,.025)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.match-cell{min-width:260px}
+.matchline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.team{display:flex;align-items:center;gap:9px}
+.team.away{margin-left:4px}
+.vs{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.12em}
+.crest,.league-crest{display:inline-grid;place-items:center;color:#fff;font-weight:800;letter-spacing:.02em;flex:0 0 auto;position:relative;overflow:hidden;box-shadow:inset 0 0 0 2px rgba(255,255,255,.12), 0 8px 18px rgba(0,0,0,.22)}
+.crest{width:34px;height:34px;border-radius:50%;font-size:11px;text-transform:uppercase}
+.league-crest{width:36px;height:36px;border-radius:12px;font-size:10px;text-transform:uppercase}
+.league-box{display:flex;align-items:center;gap:10px}
+.league-name{font-weight:700}
+.bar{height:7px;background:#284937;border-radius:999px;overflow:hidden;min-width:82px;margin-top:6px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#79f2a3,#70c7ff)}
+.highlight{color:var(--gold);font-weight:800}
+.high{color:var(--lime);font-weight:800}.low{color:var(--red);font-weight:800}
+.btn-mini{padding:8px 10px;border-radius:10px;background:#143824;font-size:12px}
+.grid2{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.detail-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.big-match{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;margin:8px 0 16px;padding:18px;border-radius:18px;background:linear-gradient(180deg, rgba(121,242,163,.08), rgba(112,199,255,.05));border:1px solid rgba(255,255,255,.07)}
+.big-team{display:flex;align-items:center;gap:12px;min-width:220px;justify-content:center}
+.big-team .crest{width:52px;height:52px;font-size:15px}
+.big-vs{font-size:14px;font-weight:900;letter-spacing:.18em;color:var(--gold)}
+.prob-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:8px 0 16px}
+.goal-card{padding:16px}
+.goal-card small{display:block;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.goal-card strong{display:block;font-size:28px}
+.note{padding:12px 14px;border-left:4px solid var(--gold);background:rgba(255,209,102,.07);border-radius:12px;color:#f7f4da;line-height:1.55}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+footer{padding:10px 2px 0;color:var(--muted);font-size:12px;line-height:1.6}
+.hide-public{display:none}
+@media(max-width:980px){.hero{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} }
+@media(max-width:680px){h1{font-size:32px} main{padding:14px} table{min-width:760px} .big-team{min-width:auto;width:100%} .event-legend{grid-template-columns:1fr} }
+
+/* Layout: every grid child can shrink, tables scroll within their own panel. */
+html,body{max-width:100%;overflow-x:hidden}main,#content,.section,.grid2,.grid2>div,.tablewrap,.hero>*{min-width:0;max-width:100%}.grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.hero{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)}.tablewrap{width:100%;overflow-x:auto;overscroll-behavior-x:contain} .grid2 table{min-width:0;table-layout:fixed;width:100%}.grid2 th,.grid2 td{white-space:normal;overflow-wrap:anywhere;padding:11px 9px}.grid2 th.num,.grid2 td.num{white-space:nowrap}.grid2 th:first-child{width:40%}.comparison table th:first-child{width:31%}.comparison table th:not(:first-child){width:23%}.comparison table th{font-size:10px;letter-spacing:.025em;white-space:normal!important;overflow-wrap:anywhere}.grid2 .tablewrap{height:auto}.brand-ball{background:#e3f7e8;color:#0b271c}.crest,.league-crest{border-radius:9px;background:#f4f7f5!important;box-shadow:none;border:1px solid #c6d9cb;color:#183b29;overflow:hidden}.crest img,.league-crest img{width:100%;height:100%;object-fit:contain;padding:4px;position:absolute;inset:0;background:#f4f7f5}.crest .initials,.league-crest .initials{position:relative;font-size:11px}.league-crest{width:40px;height:40px}.big-team .crest{width:76px;height:76px}.big-team{min-width:0;flex:1}.big-match{gap:14px}.big-team>div{min-width:0;overflow-wrap:anywhere}.analysis-panel{padding:19px;margin:16px 0;background:#10241a;border:1px solid #32744b;border-top:3px solid #79f2a3;border-radius:14px}.analysis-panel h3{font-size:20px;margin:0 0 10px}.analysis-panel p{margin:10px 0;color:#e2eee6;line-height:1.7}.analysis-panel .eyebrow{color:#9edeb1;letter-spacing:.09em;text-transform:uppercase;font-size:11px;font-weight:800}.form-strip{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:8px 0}.form-chip{display:inline-grid;place-items:center;min-width:27px;height:27px;border-radius:5px;font-size:12px;font-weight:800;background:#384639}.form-chip.W{background:#26764a;color:white}.form-chip.D{background:#675e36;color:#fff7ce}.form-chip.L{background:#74393e;color:white}.form-card{background:#132d20;border:1px solid #28583c;border-radius:12px;padding:14px;min-width:0}.form-card small{color:var(--muted)}.form-card ul{margin:10px 0 0;padding:0;list-style:none}.form-card li{display:flex;justify-content:space-between;gap:9px;font-size:13px;padding:7px 0;border-bottom:1px solid #ffffff0d}.form-card li b{white-space:nowrap}.analysis-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.league-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.league-tabs button{display:flex;align-items:center;gap:7px;padding:7px 10px;font-size:12px}.league-tabs button.active{border:1px solid #79f2a3;background:#285a3a}.league-tabs .league-crest{width:27px;height:27px}#matchselect{width:100%;max-width:100%;min-width:0}.section-header>div{min-width:0}.prob-grid{grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr))}.goal-card{min-width:0;box-shadow:none}.goal-card.selected{border:2px solid #ffd166}.goal-card strong{font-variant-numeric:tabular-nums}details{margin-top:15px}summary{cursor:pointer;color:#cde9d7;font-weight:700;padding:8px 0}.data-note{font-size:12px;color:#b7d6c0;line-height:1.6}.matchline{gap:7px}.tablewrap table{margin:0}.league-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}.league-header h3{margin:0} .analysis-panel .signal{color:#ffd166;font-weight:800}.fixture-table{min-width:790px}.detail-title{font-size:18px;margin:0 0 10px}
+@media(max-width:1100px){.grid2{grid-template-columns:minmax(0,1fr)}.hero{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){main{padding:12px}.hero-card,.status-card,.section{padding:13px;border-radius:14px}.analysis-grid{grid-template-columns:minmax(0,1fr)}.big-team{flex:1 1 100%;justify-content:flex-start;width:100%}.big-match{justify-content:flex-start}.big-team .crest{width:52px;height:52px}.grid2 th,.grid2 td{padding:9px 5px;font-size:12px}.comparison table th{font-size:9px;letter-spacing:0}.filters label{min-width:0;flex:1 1 135px}table{min-width:740px}.grid2 table{min-width:0}.league-tabs button{padding:5px 8px}.hero h1{font-size:29px}.metric strong{font-size:24px}.prob-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.goal-card{padding:12px}.goal-card strong{font-size:25px}}
+
+
+
+/* Identidad KARUBET - portada centrada y adaptable */
+.hero.karubet-hero{display:block;margin-bottom:18px}
+.hero .karubet-cover{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:23px 24px 25px;border-color:rgba(255,209,102,.31);background:radial-gradient(ellipse at 50% 2%,rgba(128,80,25,.27),transparent 56%),linear-gradient(155deg,#133823,#0a2016 90%);position:relative}
+.hero .karubet-cover::after{content:none}
+.brand-center{display:flex;justify-content:center;align-items:center;width:100%}
+.karubet-logo{display:block;width:clamp(152px,20vw,232px);height:auto;max-height:256px;object-fit:contain;filter:drop-shadow(0 11px 18px rgba(0,0,0,.3));transition:transform .25s ease}
+.karubet-logo:hover{transform:scale(1.025)}
+.karubet-kicker{margin-top:0;background:rgba(245,198,81,.13);border-color:rgba(255,209,102,.23);color:#ffe2a1;font-weight:800}
+h1.karubet-headline{margin:3px 0 2px;font-size:clamp(22px,3.2vw,39px);line-height:1.14;letter-spacing:-.035em}
+h1.karubet-headline span{color:var(--lime)}
+.karubet-cover>.sub{max-width:850px;margin:0 auto;color:#cfe5d5;font-size:clamp(13px,1.5vw,15px)}
+.karubet-cover .goal-box{max-width:920px;margin:6px auto 0;font-size:clamp(12px,1.3vw,14px);line-height:1.55;text-align:center}
+@media(max-width:680px){.hero .karubet-cover{padding:20px 14px 18px}.karubet-logo{width:165px}.karubet-kicker{font-size:10px}.karubet-cover .goal-box{padding:11px 12px}}
+
+
+/* Cronologías oficiales del score-path; colores de equipo que provocó PA y del que remontó */
+.h2h-intro{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px;font-size:13px;color:var(--muted)}
+.h2h-legend{display:inline-flex;gap:7px;align-items:center;padding:7px 10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.075);border-radius:11px}
+.h2h-legend i{width:11px;height:11px;display:inline-block;border-radius:50%}
+.h2h-pa-team{color:#ffd166;font-weight:850;text-shadow:0 0 14px rgba(255,209,102,.15)}
+.h2h-rem-team{color:#6cf0b0;font-weight:850;text-shadow:0 0 14px rgba(108,240,176,.14)}
+.h2h-table{min-width:900px}
+.h2h-table .h2h-matches{white-space:normal;min-width:195px}
+.h2h-table .event-cell{text-align:center;white-space:nowrap}
+.h2h-table .score-col{text-align:center;white-space:nowrap;font-weight:700}
+.event-yes{color:#fff;font-weight:700}
+.event-no{color:#739a80;font-size:13px}
+.event-minute{display:inline-block;margin-left:5px;padding:4px 7px;border-radius:8px;font-weight:850;white-space:nowrap;font-size:12px;background:rgba(121,242,163,.13);border:1px solid rgba(121,242,163,.3);color:#adffd0;font-variant-numeric:tabular-nums}
+.event-minute.pa{background:rgba(255,209,102,.14);border-color:rgba(255,209,102,.35);color:#ffe29a}
+.event-minute.dpa{background:rgba(112,199,255,.14);border-color:rgba(112,199,255,.3);color:#a6e0ff}
+.event-minute.rem{background:rgba(108,240,176,.14);border-color:rgba(108,240,176,.4);color:#8ffbc7}
+.minute-missing{margin-left:4px;color:#8eab99;font-size:11px;font-weight:500}
+.goal-details{margin-top:7px}
+.goal-details summary{list-style:none;display:inline-flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;color:#a9ddbd;font-weight:650}
+.goal-details summary:hover{color:#fff}
+.goal-details summary::before{content:'▸';font-size:13px;transition:transform .15s}
+.goal-details[open] summary::before{transform:rotate(90deg)}
+.goal-trail{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;max-width:500px}
+.goal-tick{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.055);border-radius:8px;padding:5px 7px;color:#d7ebde;font-size:11px}
+.goal-tick b{color:#fff;font-size:12px}
+.h2h-subnote{font-size:12px;color:#b5cabd;line-height:1.6;margin:12px 0 0}
+@media(max-width:720px){.h2h-table{min-width:820px}.h2h-table td,.h2h-table th{padding:10px 8px}.event-minute{margin:4px 0 0;display:block}}
+
+/* KARUBET 5.9 · Proyecciones y lectura editorial */
+.goal-inline{font-size:12px;font-weight:800;color:#ffffff;white-space:nowrap;border:1px solid rgba(255,209,102,.3);background:rgba(255,209,102,.09);border-radius:99px;padding:3px 7px;display:inline-flex;vertical-align:middle;margin-left:3px;font-variant-numeric:tabular-nums}
+.matchline .team{flex-wrap:wrap;min-width:0}
+.matchline .team > span:not(.crest){overflow-wrap:anywhere}
+.goal-label{font-size:12px;color:#b9d9c2;margin:0 0 8px;line-height:1.5}
+.projected-score{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:center;border:1px solid rgba(255,209,102,.23);border-radius:17px;background:linear-gradient(110deg,rgba(18,59,35,.94),rgba(13,39,33,.95));padding:14px 18px;margin:14px 0}
+.projected-team{display:flex;align-items:center;gap:8px;min-width:0}
+.projected-team:last-child{justify-content:flex-end;text-align:right}
+.projected-team strong{font-size:22px;white-space:nowrap;font-variant-numeric:tabular-nums;color:#ffd166}
+.projected-team span{font-size:13px;overflow-wrap:anywhere}
+.projected-mid{font-size:11px;color:#d4e8d8;font-weight:800;text-transform:uppercase;letter-spacing:.1em;text-align:center;line-height:1.5}
+.pick-note{margin:14px 0 12px;padding:16px 18px;background:linear-gradient(115deg,rgba(255,209,102,.09),rgba(121,242,163,.06));border:1px solid rgba(255,209,102,.3);border-left:4px solid #ffd166;border-radius:16px}
+.pick-note strong{font-size:17px;color:#fff;display:block;margin:5px 0}
+.pick-note .pick-tag{font-size:11px;letter-spacing:.07em;color:#ffd166;text-transform:uppercase;font-weight:900}
+.pick-note p{margin:7px 0!important;color:#e6f2e9;line-height:1.6}
+.pick-note small{font-size:12px;color:#bfd8c6}
+.pick-note.avoid{border-left-color:#8eabb0;background:rgba(142,171,176,.055);border-color:rgba(142,171,176,.2)}
+.pick-note.avoid .pick-tag{color:#b9d4d2}
+.goals-help{display:block;color:#adcfb7;font-size:12px;margin:6px 0 4px;line-height:1.5}
+@media(max-width:630px){.projected-score{gap:8px;padding:12px}.projected-team{display:flex;flex-direction:column;align-items:flex-start;gap:4px}.projected-team:last-child{align-items:flex-end}.projected-team strong{font-size:20px}.projected-team span{font-size:12px}.projected-mid{font-size:10px}.goal-inline{font-size:11px;padding:2px 5px}}
+
+/* KARUBET 6.0 · pronósticos de marcador compactos */
+.score-choices{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin:12px 0}
+.score-choice{min-width:102px;display:flex;gap:4px;flex-direction:column;align-items:center;justify-content:center;padding:12px 16px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.12);border-radius:14px}
+.score-choice:first-child{background:rgba(255,209,102,.13);border-color:rgba(255,209,102,.47)}
+.score-choice b{font-size:25px;letter-spacing:.04em;color:#fff;font-variant-numeric:tabular-nums}
+.score-choice:first-child b{color:#ffe7a6}
+.score-choice small{color:#c2dacb;font-size:11px;line-height:1.2}
+.pick-note .short-read{margin:10px 0 4px!important;line-height:1.45}
+.pick-note .signal-pill{display:inline-block;margin-top:5px;padding:5px 9px;border-radius:9px;color:#d7f8e2;background:rgba(121,242,163,.09);font-weight:700;font-size:12px}
+.analysis-details{margin:10px 0 18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.12);border-radius:14px;overflow:hidden}
+.analysis-details>summary{cursor:pointer;padding:13px 16px;list-style:auto;color:#bdeccd;font-weight:700}
+.analysis-details>.analysis-panel{margin:0;border:0;border-top:1px solid rgba(255,255,255,.1);border-radius:0}
+.goals-help{font-size:11px;opacity:.75}
+@media(max-width:620px){.score-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.score-choice{padding:9px 5px;min-width:0}.score-choice b{font-size:22px}}
+
+
+/* KARUBET 6.2 — nombre arriba, proyección xG debajo, siempre en blanco */
+.team-name-stack{display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-width:0;max-width:100%}
+.team-name-stack .team-primary{font-size:inherit;font-weight:760;line-height:1.2;overflow-wrap:anywhere}
+.goal-inline{display:block;color:#ffffff!important;font-size:12px;font-weight:740;white-space:nowrap;line-height:1.2;margin:0 0 0 0;padding:3px 8px;border-radius:8px;background:rgba(255,255,255,.075);border:1px solid rgba(255,255,255,.14);font-variant-numeric:tabular-nums}
+.big-team .team-name-stack{gap:6px}.big-team .team-name-stack .team-primary{font-size:22px;font-weight:850}
+.big-team .goal-inline{font-size:13px;padding:4px 10px}
+.day-team-stack{display:inline-flex;flex-direction:column;vertical-align:middle;align-items:flex-start;gap:3px;max-width:230px}
+.day-team-stack .team-primary{white-space:normal;overflow-wrap:anywhere}
+.day-team-stack .goal-inline{font-size:11px;padding:2px 6px}
+#season{border:1px solid rgba(255,209,102,.5);color:#ffe49f;background:rgba(255,209,102,.09)}
+.fixture-info{margin:4px 0 14px;color:#b7d6c0;font-size:12px;line-height:1.5}
+.fixture-info strong{color:#f7fff8}
+.provisional-time{color:#ffe2a0;font-size:12px;font-weight:700;white-space:nowrap}
+@media(max-width:600px){.team-name-stack .team-primary{font-size:13px}.goal-inline{font-size:11px}.big-team .team-name-stack .team-primary{font-size:19px}}
+
+/* KARUBET 6.2 · Búsqueda predictiva de equipos */
+.filters{position:relative;z-index:12}
+.team-search{position:relative;flex:1 1 230px;min-width:200px;max-width:340px;z-index:25}
+.team-search>label{display:block;margin-bottom:6px;font-size:12px;color:var(--muted)}
+.team-search-control{height:44px;display:flex;align-items:center;gap:9px;border:1px solid rgba(121,242,163,.32);border-radius:12px;background:#102b1c;padding:0 10px;transition:box-shadow .15s,border-color .15s}
+.team-search-control:focus-within{border-color:#79f2a3;box-shadow:0 0 0 3px rgba(121,242,163,.13)}
+.team-search-glass{font-size:18px;line-height:1;color:#91e7ab}
+.team-search-control input{background:transparent;border:0;padding:9px 0;outline:0;box-shadow:none;color:#fff;min-width:0;width:100%;font-size:14px}
+.team-search-control input:focus{outline:0}
+.team-search-control input::placeholder{color:#a1b8a8}
+.team-clear{border:0;background:rgba(255,255,255,.09);border-radius:8px;color:#ebfff1;padding:3px 8px;font-size:17px;line-height:1.2}
+.team-clear[hidden]{display:none}
+.team-suggestions{position:absolute;top:calc(100% + 7px);left:0;right:0;max-height:370px;overflow-y:auto;border:1px solid rgba(121,242,163,.38);background:#10291c;border-radius:14px;padding:6px;box-shadow:0 18px 45px rgba(0,0,0,.58);z-index:60}
+.team-suggestions[hidden]{display:none!important}
+.team-suggestion{border:0;border-radius:9px;background:transparent;width:100%;color:#fff;text-align:left;display:flex;align-items:center;gap:10px;padding:8px 10px}
+.team-suggestion:hover,.team-suggestion.active,.team-suggestion:focus-visible{background:#22553a;outline:none}
+.team-suggestion .crest{width:32px;height:32px;font-size:10px}
+.team-suggestion-label{display:flex;flex-direction:column;min-width:0;gap:2px}
+.team-suggestion-label strong{font-size:13px;white-space:normal}
+.team-suggestion-label small{font-size:11px;color:#b5d6c1}
+.team-search-help{font-size:12px;color:#b6d5c1;padding:10px}
+.team-search-status{margin:0 0 14px;color:#cbf5d9;font-size:13px;display:none;align-items:center;gap:10px;flex-wrap:wrap}
+.team-search-status.show{display:flex}
+.team-search-status strong{color:#fff}
+@media(max-width:700px){.team-search{max-width:none;flex:1 1 100%;width:100%}.team-suggestions{max-height:305px}.filters{z-index:22}}
+</style>
+<script src="/original-logo.js" defer></script>
+<script src="/classic-app.js" defer></script>
+</head>
+<body>
+<main>
+  <section class="hero karubet-hero">
+    <div class="hero-card karubet-cover">
+      <div class="brand-center">
+        <img class="karubet-logo" src="" data-karubet-logo="original" alt="KARUBET: mascota perro Bull Terrier y gato ilustrados" width="232" height="246">
+      </div>
+      <div class="kicker karubet-kicker">KARUBET · MATCH CENTRE</div>
+      <h1 class="karubet-headline">La jornada, <span>con otra mirada.</span></h1>
+      <p class="sub"><b>Nuestro objetivo:</b> identificar los partidos con mayor potencial estadístico de <b>PA</b>, <b>Quasi Doble PA</b>, <b>Doble PA</b> y <b>Remontada</b>.</p>
+    </div>
+  </section>
+
+  <div class="filters">
+    <label>Desde (hora Perú)<input type="date" id="start"></label>
+    <label>Hasta (inclusive)<input type="date" id="end"></label>
+    <label>Liga<select id="league"><option value="all">Todas las ligas</option></select></label>
+    <div class="team-search" id="teamSearch">
+      <label for="teamQuery">Buscar equipo</label>
+      <div class="team-search-control">
+        <span class="team-search-glass" aria-hidden="true">⌕</span>
+        <input id="teamQuery" type="search" placeholder="Real Madrid, Bayern, Chelsea…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="teamSuggestions" aria-expanded="false" aria-label="Buscar equipo con sugerencias">
+        <button type="button" class="team-clear" id="teamClear" aria-label="Quitar equipo seleccionado" title="Limpiar búsqueda" hidden>×</button>
+      </div>
+      <div id="teamSuggestions" class="team-suggestions" role="listbox" aria-label="Equipos sugeridos" hidden></div>
+    </div>
+    <label>Evento a ordenar<select id="event"><option value="pa">PA</option><option value="qpa">Quasi Doble PA</option><option value="dpa">Doble PA</option><option value="rem">Remontada</option></select></label>
+    <label>Modelo<select id="model"><option value="ewma" selected>Forma actual</option><option value="h2h">Forma + historial</option><option value="original">Referencia</option></select></label>
+    <label>Top / Bottom<select id="k"><option>3</option><option selected>5</option><option>10</option></select></label>
+    <button id="week" class="primary">Próximos 7 días</button>
+    <button id="season">Toda la temporada</button>
+  </div>
+
+  <div id="teamSearchStatus" class="team-search-status" aria-live="polite"></div>
+  <div class="league-tabs" id="leagueTabs" aria-label="Filtrar por competición"></div>
+  <nav id="nav">
+    <button data-view="fixture" class="active">Fixture</button>
+    <button data-view="rank">Top por liga</button>
+    <button data-view="day">Resumen por día</button>
+    <button data-view="detail">Analizar partido</button>
+  </nav>
+  <div id="content"><p>Para ver el fixture activa JavaScript.</p></div>
+
+  <footer>
+    Probabilidades experimentales del motor original KARUBET 6.3, actualizadas desde Supabase. Los resultados no son garantías. Los H2H con cronologías y la forma detallada se mostrarán cuando esas métricas estén disponibles en la base.
+  </footer>
+</main>
+</body></html>
