@@ -1,10 +1,9 @@
-name: KARUBET - cuotas 1X2 cada 15 min
+name: KARUBET - cuotas 1X2 cada 10 min
 
 on:
-  # Cada 15 minutos, en UTC. Minutos desplazados del inicio de hora
-  # para reducir demoras en los runners compartidos de GitHub.
+  # Cada 10 minutos en UTC, desplazado del inicio de cada hora.
   schedule:
-    - cron: '7,22,37,52 * * * *'
+    - cron: '7,17,27,37,47,57 * * * *'
   workflow_dispatch:
     inputs:
       save_to_db:
