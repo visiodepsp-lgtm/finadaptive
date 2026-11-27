@@ -1,9 +1,9 @@
 name: KARUBET - cuotas 1X2 cada 10 min
 
 on:
-  # Cada 10 minutos en UTC, desplazado del inicio de cada hora.
+  # Cada 10 minutos en UTC. Nueva ventana de comprobación iniciando en el minuto 56 UTC (27 Nov 2026).
   schedule:
-    - cron: '7,17,27,37,47,57 * * * *'
+    - cron: '6,16,26,36,46,56 * * * *'
   workflow_dispatch:
     inputs:
       save_to_db:
