@@ -4,7 +4,7 @@ import asyncio
 import re
 from playwright.async_api import async_playwright
 
-URL="https://www.apuestatotal.com/apuestas-en-vivo/?fpath=/es-pe/spbkv3/sports/1/category?league=25"
+URL="https://www.apuestatotal.com/apuestas-en-vivo/?fpath=/es-pe/spbkv3/sports/1"
 
 async def main():
   async with async_playwright() as pw:
