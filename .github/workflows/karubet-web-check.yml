@@ -1,5 +1,4 @@
 name: KARUBET - validar web 7.0
-
 on:
   push:
     branches:
@@ -8,10 +7,8 @@ on:
       - 'karubet/web/**'
       - '.github/workflows/karubet-web-check.yml'
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   verify:
     runs-on: ubuntu-24.04
@@ -53,16 +50,16 @@ jobs:
           rules=[r for r in config['headers'] if r['source']=='/(.*)']
           assert len(rules)==1, 'No hay cabeceras seguras en Vercel'
           headers={h['key'].lower():h['value'] for h in rules[0]['headers']}
-          assert headers['x-frame-options'].upper()=='SAMEORIGIN'
-          assert "frame-ancestors 'self'" in headers['content-security-policy']
-          assert "frame-src 'self'" in headers['content-security-policy']
-          assert "frame-ancestors 'none'" not in headers['content-security-policy']
+          assert headers['x-frame-options'].upper()=='DENY'
+          assert "frame-ancestors 'none'" in headers['content-security-policy']
           assert "script-src 'self'" in headers['content-security-policy']
           html=Path('karubet/web/index.html').read_text()
           classic=Path('karubet/web/classic.html').read_text()
-          assert 'id="classicFrame"' in html and 'src="/classic.html"' in html
+          assert '<iframe' not in html and '<iframe' not in classic
+          assert 'href="/classic.html"' in html
+          assert 'href="/?tab=market"' in classic
           assert 'data-karubet-logo="original"' in classic
-          print('Iframe original permitido exclusivamente mismo origen: OK')
+          print('Páginas independientes sin iframes: OK')
           PY
       - name: Probar API offline sin secretos
         run: python -m unittest discover -s karubet/web/tests -p 'test_*.py' -v
