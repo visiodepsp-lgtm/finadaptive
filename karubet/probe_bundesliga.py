@@ -1,46 +1,47 @@
 #!/usr/bin/env python3
-"""Exploración temporal de la navegación pública de Bundesliga; no escribe datos."""
-import asyncio
-import re
+"""Explora navegación de categorías, solo lectura, no recopila cuotas."""
+import asyncio,re
 from playwright.async_api import async_playwright
-
 URL="https://www.apuestatotal.com/apuestas-en-vivo/?fpath=/es-pe/spbkv3/sports/1"
-
 async def main():
   async with async_playwright() as pw:
     browser=await pw.chromium.launch(headless=True,args=["--no-sandbox"])
-    context=await browser.new_context(locale="es-PE",timezone_id="America/Lima",viewport={"width":1450,"height":920})
+    context=await browser.new_context(locale="es-PE",timezone_id="America/Lima",viewport={"width":1500,"height":920})
     page=await context.new_page()
-    urls=set()
-    page.on("request", lambda r: urls.add(r.url) if len(urls)<180 else None)
-    await page.goto(URL,wait_until="domcontentloaded",timeout=60000)
-    await page.wait_for_timeout(9000)
-    print("START_URL",page.url,flush=True)
-    for frame in page.frames:
-      print("FRAME",frame.url[:250],flush=True)
+    await page.goto(URL,wait_until="domcontentloaded",timeout=55000)
+    await page.wait_for_timeout(8000)
+    frame=next(f for f in page.frames if "kmianko.com" in f.url)
+    async def report(name):
+      print("STAGE",name,"URL",frame.url,flush=True)
+      print("BODY",repr((await frame.locator("body").inner_text())[:5500]),flush=True)
+      data=await frame.evaluate("""() => [...document.querySelectorAll('button,[role=button],a,[data-part]')]
+         .filter(e=>/menú|menu|fútbol|bundesliga|alemania|germany/i.test((e.innerText||e.textContent||'').trim())&&
+           (e.innerText||e.textContent||'').trim().length<75)
+         .slice(0,85).map(e=>({tag:e.tagName,text:(e.innerText||e.textContent||'').trim().slice(0,70),
+           part:e.getAttribute('data-part'),role:e.getAttribute('role'),
+           html:e.outerHTML.slice(0,250)}))""")
+      print("CONTROLS",repr(data)[:16000],flush=True)
+    await report("start")
+    for label in ("MENÚ","Fútbol","Alemania","Bundesliga"):
       try:
-        data=await frame.evaluate("""() => {
-          const elements=[...document.querySelectorAll('a,button,[role="button"],[role="menuitem"],[role="option"],div,span')].filter(el=>/bundesliga|alemania|germany/i.test((el.innerText||el.textContent||'').trim())&& (el.innerText||el.textContent||'').trim().length<115).slice(0,200);
-          return {matches:elements.slice(0,80).map(el=>({tag:el.tagName,txt:(el.innerText||el.textContent||'').trim().slice(0,100),href:el.getAttribute('href'),parent:el.parentElement?.outerHTML.slice(0,500)})),links:[...document.querySelectorAll('a[href]')].filter(a=>/league=|bundes|alemania|germany/i.test(a.getAttribute('href')||'')||/bundesliga/i.test(a.innerText||'')).slice(0,75).map(a=>({text:(a.innerText||'').slice(0,90),href:a.getAttribute('href')}))};
-        }""")
-        print("FOUND",repr(data)[:16000],flush=True)
-        details=await frame.evaluate("""() => ({body:(document.body?.innerText||'').slice(0,4700),anchors:[...document.querySelectorAll('a[href]')].slice(0,75).map(a=>({text:(a.innerText||'').slice(0,100),href:a.getAttribute('href')})),buttons:[...document.querySelectorAll('button,[role=button]')].slice(0,75).map(a=>(a.innerText||'').trim().slice(0,60))})""")
-        print("DETAILS",repr(details)[:14000],flush=True)
-        for tag in ("text=Bundesliga","text=Alemania","text=Germany"):
-          try:
-            loc=frame.get_by_text(re.compile("Bundesliga|Alemania|Germany",re.I)).first
-            if await loc.count():
-              print("CLICKING",tag,flush=True)
-              await loc.click(timeout=6500)
-              await page.wait_for_timeout(2000)
-              print("AFTER_CLICK",page.url,frame.url,flush=True)
-              break
-          except Exception as e:
-            print("NO_CLICK",type(e).__name__,str(e)[:150],flush=True)
+        # exact text targets navigational elements rather than entire match card
+        loc=frame.get_by_text(label,exact=True)
+        print("LOOKUP",label,await loc.count(),flush=True)
+        if await loc.count()==0: continue
+        nodes=await loc.all()
+        chosen=None
+        for n in nodes[:8]:
+          par=await n.evaluate("(e)=>e.closest('button,[role=button],a')?.outerHTML.slice(0,250)")
+          print("CANDIDATE",label,par,flush=True)
+          if label=="Bundesliga" and par and "featured" in par:continue
+          chosen=n;break
+        if not chosen:continue
+        await chosen.click(timeout=5500)
+        await frame.wait_for_timeout(1200)
+        await report("clicked "+label)
       except Exception as e:
-        print("FRAME_ERROR",type(e).__name__,str(e)[:300],flush=True)
-    print("REQUESTS",repr([u for u in urls if any(x in u.lower() for x in ("sports", "category", "api/", "event", "competition", "leag", "menu"))])[:20000],flush=True)
-    print("FINISH_URL",page.url,flush=True)
+        print("CLICK_ERROR",label,type(e).__name__,str(e)[:250],flush=True)
+    print("FINAL",frame.url,page.url,flush=True)
     await browser.close()
 if __name__=="__main__":
   asyncio.run(main())
