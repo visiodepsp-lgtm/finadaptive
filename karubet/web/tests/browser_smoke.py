@@ -50,8 +50,7 @@ async def main():
         async with async_playwright() as pw:
             browser = await pw.chromium.launch(headless=True,args=["--no-sandbox"])
             context = await browser.new_context(viewport={"width":1450,"height":900})
-            await context.add_init_script(
-                "sessionStorage.setItem('karubet_access','TEST_TOKEN_LONG_ENOUGH_987654321')")
+            # Sin claves ni cookies: ambas páginas deben funcionar públicamente.
             page = await context.new_page()
             page.on("pageerror",lambda e: errors.append(str(e)))
             async def mock_data(route):
@@ -62,7 +61,18 @@ async def main():
                           "asof":"2026-11-27T15:00:00+00:00",
                           "page_full":False,"days":210}
                 elif kind=="markets":
-                    data={"items":[],"count":0,"asof":"2026-11-27T15:00:00+00:00"}
+                    data={"items":[{
+                        "league_code":"74","home_team":"Napoli","away_team":"Inter",
+                        "kickoff_at":"2026-11-29T14:00:00+00:00",
+                        "captured_at":"2026-11-27T15:15:00+00:00",
+                        "odd_home":2.14,"odd_draw":3.47,"odd_away":3.39,
+                        "source_url":"https://www.apuestatotal.com/"
+                    }],"count":1,"asof":"2026-11-27T15:15:00+00:00"}
+                elif kind=="history":
+                    data={"items":[
+                        {"captured_at":"2026-11-27T15:00:00+00:00","odd_home":2.08,"odd_draw":3.40,"odd_away":3.49},
+                        {"captured_at":"2026-11-27T15:15:00+00:00","odd_home":2.14,"odd_draw":3.47,"odd_away":3.39}
+                    ],"count":2}
                 else:
                     data={"items":[]}
                 await route.fulfill(status=200,content_type="application/json",
@@ -76,6 +86,9 @@ async def main():
             text=await page.locator("#content").inner_text()
             assert "Inter" in text and "52.0%" in text,text[:1100]
             print("Hoja 1 completa, fixtures y PA original: OK")
+            crest = await page.evaluate("window.KARUBET_TEAM_CREST('Napoli','serie-a')")
+            assert crest and 'SSC%20Napoli.png' in crest,crest
+            print("Escudo Napoli 2026/27 identificado: OK")
             await page.locator("#nav button[data-view='rank']").click()
             assert "Napoli" in await page.locator("#content").inner_text()
             print("Top por liga: OK")
@@ -92,6 +105,21 @@ async def main():
             await page.wait_for_url("**/?tab=market",timeout=12000)
             await page.locator("#marketPage").wait_for(state="visible",timeout=15000)
             assert await page.locator("iframe").count()==0
+            await page.locator("#marketList").get_by_text("Napoli",exact=False).first.wait_for(timeout=12000)
+            assert await page.locator("#marketList .market-line").count()==1
+            await page.locator("#marketSearch").fill("Napo")
+            assert await page.locator("#marketList .market-line").count()==1
+            options=await page.locator("#marketSuggestions option").evaluate_all(
+                "(nodes)=>nodes.map(x=>x.value)")
+            assert "Napoli" in options,options
+            await page.locator("#marketSearch").fill("")
+            await page.locator("#marketLeague").select_option("24")
+            assert await page.locator("#marketList .market-line").count()==0
+            await page.locator("#marketLeague").select_option("74")
+            assert await page.locator("#marketList .market-line").count()==1
+            assert await page.locator("#chartArea svg").count()==1
+            assert await page.locator("#marketName img").count()==2
+            print("Filtros, autocompletado, logos y gráfico de mercado: OK")
             print("Navegación a Market Centre: OK")
             await browser.close()
     finally:
