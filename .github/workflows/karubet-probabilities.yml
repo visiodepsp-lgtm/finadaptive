@@ -1,8 +1,10 @@
 name: KARUBET - probabilidades originales 6.3
 
 on:
-  # Manual durante la validación. Activaremos el horario semanal después
-  # de subir el paquete privado de modelos y probar la primera ejecución.
+  # Los lunes, después de la sincronización de BBETS (07:17 UTC).
+  # También puede ejecutarse manualmente tras actualizar BBETS_2026.zip.
+  schedule:
+    - cron: '13 8 * * 1'
   workflow_dispatch:
 
 permissions:
