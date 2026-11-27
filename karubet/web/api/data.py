@@ -38,7 +38,8 @@ def get_json(table: str, params: dict) -> list:
             "La clave privada SUPABASE_SECRET_KEY en Vercel debe comenzar por sb_secret_.",
         )
     if table not in ("karubet_fixtures_2026", "karubet_model_outputs",
-                     "karubet_odds_1x2", "karubet_fixture_odds_links"):
+                     "karubet_odds_1x2", "karubet_fixture_odds_links",
+                     "karubet_fixture_context_original"):
         raise ValueError("Tabla no autorizada")
     url = base + "/rest/v1/" + table + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={
@@ -152,6 +153,30 @@ def history(query: dict) -> dict:
     return {"items": rows, "count": len(rows), "truncated": len(rows) >= 1000}
 
 
+
+def contexts(query: dict) -> dict:
+    """Recupera SOLO el contexto histórico original de fixtures concretos.
+
+    No modifica probabilidades ni crea estadísticas: son observaciones
+    procedentes de KARUBET Match Centre 6.3 con fecha de corte 2026-11-22.
+    La lista de IDs es limitada para evitar descargas sin restricción.
+    """
+    raw = query.get("ids", [""])[0].strip()
+    if not re.fullmatch(r"[0-9]{1,15}(?:,[0-9]{1,15}){0,79}", raw):
+        raise ValueError("Se requieren entre 1 y 80 fixture_id numéricos")
+    ids = list(dict.fromkeys(raw.split(",")))
+    rows = get_json("karubet_fixture_context_original", {
+        "select": "fixture_id,source_snapshot_date,context",
+        "fixture_id": "in.(" + ",".join(ids) + ")",
+        "limit": "80",
+    })
+    return {
+        "items": rows, "count": len(rows),
+        "source": "KARUBET Match Centre 6.3 · copia histórica original",
+        "snapshot_date": "2026-11-22",
+    }
+
+
 def linked(query: dict) -> dict:
     fixture_id = query.get("fixture_id", [""])[0]
     if not re.fullmatch(r"[0-9]{1,15}", fixture_id):
@@ -196,6 +221,8 @@ class handler(BaseHTTPRequestHandler):
                 result = history(query)
             elif kind == "linked":
                 result = linked(query)
+            elif kind == "contexts":
+                result = contexts(query)
             else:
                 self._send(400, {"error": "TIPO_INVALIDO"})
                 return
