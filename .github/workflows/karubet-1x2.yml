@@ -1,0 +1,56 @@
+name: KARUBET - prueba cuotas 1X2
+
+on:
+  workflow_dispatch:
+    inputs:
+      save_to_db:
+        description: "Guardar capturas en Supabase (solo tras revisar el diagnostico)"
+        type: boolean
+        default: false
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: karubet-1x2-collector
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: Leer cuotas de 5 ligas
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      PERSIST: ${{ inputs.save_to_db }}
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar dependencias
+        run: |
+          python -m pip install -r karubet/requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Revisar sintaxis
+        run: python -m py_compile karubet/*.py
+      - name: Capturar listado y verificar conexion
+        shell: bash
+        run: |
+          if [ "$PERSIST" = "true" ]; then
+            python karubet/collector.py --out karubet/output --persist
+          else
+            python karubet/collector.py --out karubet/output
+          fi
+      - name: Descargar diagnosticos y cuotas como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: karubet-diagnostico-1x2
+          path: karubet/output/
+          retention-days: 7
+          if-no-files-found: warn
