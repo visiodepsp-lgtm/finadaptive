@@ -89,6 +89,15 @@ async def main():
             crest = await page.evaluate("window.KARUBET_TEAM_CREST('Napoli','serie-a')")
             assert crest and 'SSC%20Napoli.png' in crest,crest
             print("Escudo Napoli 2026/27 identificado: OK")
+            logos = await page.locator("#leagueTabs .league-crest img").count()
+            assert logos == 5, f"Insignias de ligas faltantes: {logos}/5"
+            urls = await page.locator("#leagueTabs .league-crest img").evaluate_all(
+                "(imgs)=>imgs.map(im=>im.getAttribute('src'))"
+            )
+            assert any("league_premier-league.png" in u for u in urls),urls
+            assert any("league_ligue-1.png" in u for u in urls),urls
+            print("Insignias de Premier, LaLiga, Serie A, Bundesliga y Ligue 1: OK")
+
             await page.locator("#nav button[data-view='rank']").click()
             assert "Napoli" in await page.locator("#content").inner_text()
             print("Top por liga: OK")
