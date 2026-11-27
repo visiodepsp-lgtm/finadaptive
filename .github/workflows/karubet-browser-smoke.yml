@@ -6,6 +6,10 @@ on:
       - main
     paths:
       - 'karubet/web/tests/browser_smoke.py'
+      - 'karubet/web/classic.html'
+      - 'karubet/web/classic-app.js'
+      - 'karubet/web/index.html'
+      - 'karubet/web/app.js'
       - '.github/workflows/karubet-browser-smoke.yml'
   workflow_dispatch:
 
