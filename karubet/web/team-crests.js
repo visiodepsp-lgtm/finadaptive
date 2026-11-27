@@ -23,4 +23,25 @@ window.KARUBET_TEAM_CREST=function(team,league){
   return found.length===1 ? found[0] : null;
 };
 window.KARUBET_CREST_SOURCE="luukhopman/football-logos · 2026/27";
+
+// Insignias de ligas, obtenidas de repo público de activos deportivos 2026.
+const leagueBadges={
+  "epl":"https://raw.githubusercontent.com/Sachawd/wc26-assets/main/league-logos/league_premier-league.png",
+  "la-liga":"https://raw.githubusercontent.com/Sachawd/wc26-assets/main/league-logos/league_la-liga.png",
+  "serie-a":"https://raw.githubusercontent.com/Sachawd/wc26-assets/main/league-logos/league_serie-a.png",
+  "bundesliga":"https://raw.githubusercontent.com/Sachawd/wc26-assets/main/league-logos/league_bundesliga.png",
+  "ligue-1":"https://raw.githubusercontent.com/Sachawd/wc26-assets/main/league-logos/league_ligue-1.png"
+};
+const leagueNames={
+  "premier league":"epl","epl":"epl","24":"epl",
+  "laliga":"la-liga","la liga":"la-liga","la-liga":"la-liga","38":"la-liga",
+  "serie a":"serie-a","serie-a":"serie-a","74":"serie-a",
+  "bundesliga":"bundesliga",
+  "ligue 1":"ligue-1","ligue-1":"ligue-1","25":"ligue-1"
+};
+window.KARUBET_LEAGUE_CREST=function(league){
+  const k=leagueNames[normalize(league)]||leagueNames[String(league||"")];
+  return leagueBadges[k]||null;
+};
+
 })();
