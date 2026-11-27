@@ -129,3 +129,69 @@ body.market-mode{--bg:#060b11;--panel:#0b141e;--panel2:#0e1a25;--ink:#dce7ed;--m
 .terminal-topnav a.active{background:#163140;color:#7ce6c1;border-color:#2a594e;font-weight:800}
 .terminal-topnav a:hover{color:#eefaff;border-color:#466274}
 @media(max-width:670px){.terminal-topnav a{font-size:9px;padding:8px 6px}.market-mode .topbar .brand small{display:none}.market-mode .pill{display:none}}
+
+
+/* Cohesión de color entre Hoja 1 y Hoja 2, sin perder densidad de terminal */
+@view-transition{navigation:auto}
+.market-mode{background:linear-gradient(120deg,#06150f,#091a18 55%,#07151b)}
+.market-mode .topbar{
+  min-height:68px;height:68px;
+  background:linear-gradient(90deg,rgba(8,28,21,.98),rgba(8,33,30,.97));
+  border-bottom-color:#2d6250;
+  box-shadow:0 10px 24px #00000022;
+  view-transition-name:karubet-header;
+}
+.market-mode .topbar .brand{view-transition-name:karubet-brand}
+.market-mode .topbar .brand-logo-original{view-transition-name:karubet-logo}
+.market-mode .terminal-topnav a{border:1px solid #315c4d;background:#143527;
+  font-size:12px;padding:10px 13px;border-radius:8px;
+  transition:background .16s ease,color .16s ease,border .16s ease,transform .16s ease}
+.market-mode .terminal-topnav a:hover{background:#1b5441;border-color:#70cdaa;transform:translateY(-1px)}
+.market-mode .terminal-topnav a.active{background:#205942;border-color:#68c995;color:#b9ffdc}
+.market-mode .terminal-mast{background:#10241d;border-color:#2a5141}
+.market-mode .terminal-statusbar{background:#0d241d;border-color:#2b5345}
+.market-mode .terminal-statusbar>span{border-color:#2b5345}
+.market-mode .terminal-statusbar b{color:#a7f5c7}
+.market-mode .terminal-layout{background:#214a3c;border-color:#254e40}
+.market-mode .terminal-watchlist,.market-mode .terminal-analysis{background:#0b211b}
+.market-mode .terminal-main-chart{background:#0b1c19}
+.market-mode .terminal-section-head{background:#153126;border-color:#285442}
+.market-mode .terminal-filters{background:#0f2820;border-color:#2b5345}
+.market-mode .terminal-filters input,.market-mode .terminal-filters select{
+  background:#0b1c17;border-color:#38624f;color:#e4faeb}
+.market-mode .terminal-marketlist{scrollbar-color:#306e52 #0b211b}
+.market-mode .market-line{background:#0a2019;border-color:#214b3a}
+.market-mode .market-line:nth-child(even){background:#10281e}
+.market-mode .market-line:hover{background:#174332}
+.market-mode .market-line.active{background:#1a4935;box-shadow:inset 3px 0 #72e5ae}
+.market-mode .market-line-price{color:#d7e9dd}
+.market-mode .watchlist-heading{background:#133125;border-color:#285542;color:#8ab9a0}
+.market-mode .terminal-chart-header{border-color:#2a513f}
+.market-mode .terminal-quotes{background:#143026;border-color:#2e5846}
+.market-mode .terminal-quotes .price.active{background:#1b4332!important}
+.market-mode .terminal-graph-toolbar{background:#0b221b;border-color:#2a5040}
+.market-mode .terminal-main-chart .graph{background:#071911}
+.market-mode .terminal-main-chart .graph line{stroke:#244b39}
+.market-mode .terminal-main-chart .graph-legend{background:#0d241c;border-color:#2c5142}
+.market-mode .terminal-analysis .stats>div{background:#102b21}
+.market-mode .terminal-tape{background:#0d2019;border-color:#2b5242}
+.market-mode .terminal-tape .history-wrap th,
+.market-mode .terminal-tape .history-wrap td{border-color:#2a4c3b}
+.market-mode #marketFreshness{flex:1}
+.market-mode .health-stale{color:#f4c27f!important}
+.market-mode .health-fresh{color:#85e7b5!important}
+.market-mode .terminal-foot{color:#92b6a2}
+@keyframes karubet-fade-in{from{opacity:.3;filter:blur(3px);transform:translateY(7px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
+@keyframes karubet-fade-out{to{opacity:.25;transform:translateY(-3px)}}
+::view-transition-old(root){animation:130ms ease-out both karubet-fade-out}
+::view-transition-new(root){animation:250ms ease-out both karubet-fade-in}
+::view-transition-old(karubet-header),::view-transition-new(karubet-header){animation-duration:200ms}
+::view-transition-old(karubet-logo),::view-transition-new(karubet-logo){animation-duration:180ms}
+.market-mode main{animation:karubet-fade-in .23s ease-out both}
+@media(prefers-reduced-motion:reduce){
+  .market-mode main{animation:none}
+  ::view-transition-old(root),::view-transition-new(root),
+  ::view-transition-old(karubet-header),::view-transition-new(karubet-header),
+  ::view-transition-old(karubet-logo),::view-transition-new(karubet-logo){animation:none}
+}
+@media(max-width:670px){.market-mode .terminal-topnav a{padding:8px 7px;font-size:10px}}
