@@ -318,6 +318,7 @@ async function loadMarkets() {
     const data = await request("markets");
     const before = state.selectedMarket;
     state.markets = data.items || [];
+    renderMarketLeagueChips();
     renderMarketSuggestions();
     $("marketMatches").textContent = state.markets.length;
     const newest = state.markets
@@ -363,6 +364,28 @@ function teamCrestHtml(name,league,cls="team-crest"){
   const initials=name.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
   return '<span class="'+cls+'">'+(url?'<img loading="lazy" alt="" src="'+escapeHTML(url)+'">':
     '<span class="crest-fallback">'+escapeHTML(initials)+'</span>')+'</span>';
+}
+function renderMarketLeagueChips(){
+  const target=$("marketLeaguePills");
+  if(!target) return;
+  target.replaceChildren();
+  const leagues=[{id:"",name:"Todas"}, ...[...new Set(state.markets.map(m=>String(m.league_code)))]
+    .sort((a,b)=>(LEAGUES[a]||a).localeCompare(LEAGUES[b]||b,"es"))
+    .map(id=>({id,name:LEAGUES[id]||id}))];
+  for(const league of leagues){
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="terminal-league-chip"+($("marketLeague").value===league.id?" active":"");
+    const logo=league.id && window.KARUBET_LEAGUE_CREST?.(league.id);
+    button.innerHTML=(logo?'<img loading="lazy" src="'+escapeHTML(logo)+'" alt="">':"")+
+      '<span>'+escapeHTML(league.name)+'</span>';
+    button.title=league.name;
+    button.addEventListener("click",()=>{
+      $("marketLeague").value=league.id;
+      renderMarketLeagueChips();renderMarketSuggestions();renderMarkets();
+    });
+    target.appendChild(button);
+  }
 }
 function renderMarketSuggestions(){
   const datalist=$("marketSuggestions");
@@ -541,7 +564,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("tabMarket").addEventListener("click",()=>setTab("market"));
   $("refreshFixtures").addEventListener("click",()=>loadFixtures(true).catch(e=>{setStatus("Error de lectura",false);alert(e.message);}));
   $("refreshMarkets").addEventListener("click",()=>loadMarkets());
-  // El servidor registra cada 15m. La interfaz revisa novedades cada 2m
+  // El recolector tiene horario de 10m en GitHub Actions (puede retrasarse).. La interfaz revisa novedades cada 2m
   // mientras el usuario tenga visible la Hoja 2, sin recargar la página.
   setInterval(()=>{
     if(!document.hidden && !$("marketPage").hidden) loadMarkets();
@@ -567,7 +590,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setTab("market");
   renderMarketSuggestions();
   loadMarkets();
-  $("marketLeague").addEventListener("change",()=>{renderMarketSuggestions();renderMarkets();});
+  $("marketLeague").addEventListener("change",()=>{renderMarketLeagueChips();renderMarketSuggestions();renderMarkets();});
   $("marketSearch").addEventListener("input",()=>{renderMarketSuggestions();renderMarkets();});
   document.addEventListener("error",event=>{
     if(event.target instanceof HTMLImageElement && event.target.closest(".team-crest,.terminal-hero-crest"))
