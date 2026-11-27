@@ -19,6 +19,7 @@ import urllib.error
 import urllib.request
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -191,7 +192,50 @@ async def recolectar(carpeta: Path) -> tuple[list[dict], list[dict]]:
     return resultados, diagnosticos
 
 
-def revisar_filas(filas: list[dict], diagnosticos: list[dict]) -> tuple[list[dict], dict]:
+
+# La web muestra "27/11 • 15:00": el punto es U+2022 (no U+00B7).
+DATE_WEB_RE = re.compile(
+    r"(?<!\d)(\d{1,2})\s*/\s*(\d{1,2})\s*[·•.\-]?\s*(\d{1,2}):(\d{2})(?!\d)"
+)
+EXPECTED_COMPETITIONS = {
+    "25": "Ligue 1", "74": "Serie A", "24": "Premier League",
+    "38": "La Liga", "125": "Champions League",
+}
+
+
+def completar_fecha(f: dict, capturado_utc: str | None = None) -> None:
+    """Recupera fecha del HTML original y calcula fecha UTC si el año es inequívoco.
+
+    La web no escribe el año: el año se infiere sólo dentro de una ventana futura
+    de 120 días / pasada de 2 días desde la captura; de lo contrario queda NULL.
+    La hora se interpreta en America/Lima (configuración de Playwright).
+    """
+    fuente = (f.get("kickoff_text") or "") + " " + (f.get("raw_excerpt") or "")
+    hallazgo = DATE_WEB_RE.search(fuente)
+    f["kickoff_at"] = None
+    if not hallazgo:
+        return
+    dia, mes, hora, minuto = map(int, hallazgo.groups())
+    f["kickoff_text"] = f"{dia:02d}/{mes:02d} {hora:02d}:{minuto:02d}"
+    ahora = datetime.fromisoformat(capturado_utc) if capturado_utc else datetime.now(timezone.utc)
+    if ahora.tzinfo is None:
+        ahora = ahora.replace(tzinfo=timezone.utc)
+    ahora_lima = ahora.astimezone(ZoneInfo("America/Lima"))
+    opciones = []
+    for anio in (ahora_lima.year - 1, ahora_lima.year, ahora_lima.year + 1):
+        try:
+            fecha = datetime(anio, mes, dia, hora, minuto, tzinfo=ZoneInfo("America/Lima"))
+        except ValueError:
+            continue
+        segundos = (fecha - ahora_lima).total_seconds()
+        if -2 * 86400 <= segundos <= 120 * 86400:
+            opciones.append((abs(segundos), fecha))
+    if opciones:
+        fecha = min(opciones, key=lambda x: x[0])[1]
+        f["kickoff_at"] = fecha.astimezone(timezone.utc).isoformat()
+
+
+def revisar_filas(filas: list[dict], diagnosticos: list[dict], capturado_utc: str | None = None) -> tuple[list[dict], dict]:
     apariciones = defaultdict(set)
     for fila in filas:
         pareja = (normaliza(fila["home_team"]), normaliza(fila["away_team"]))
@@ -200,8 +244,12 @@ def revisar_filas(filas: list[dict], diagnosticos: list[dict]) -> tuple[list[dic
     validas = []
     rechazadas = Counter()
     faltan_fechas = 0
+    falta_categoria = 0
     visto = set()
     for f in filas:
+        completar_fecha(f, capturado_utc)
+        etiqueta_esperada = EXPECTED_COMPETITIONS.get(f["league_code"])
+        liga_confirmada = bool(etiqueta_esperada and etiqueta_esperada.casefold() in (f.get("raw_excerpt") or "").casefold())
         pareja = (normaliza(f["home_team"]), normaliza(f["away_team"]))
         if pareja in solapadas:
             rechazadas["partido_en_multiples_categorias"] += 1
@@ -230,12 +278,15 @@ def revisar_filas(filas: list[dict], diagnosticos: list[dict]) -> tuple[list[dic
         p = probabilidades_mercado(*cuotas)
         f["market_p_home"], f["market_p_draw"], f["market_p_away"] = p
         f["quality_flags"] = {
-            "kickoff_missing": not bool(f["kickoff_text"]),
-            "league_not_confirmed": True,
+            "kickoff_missing": not bool(f.get("kickoff_at")),
+            "kickoff_year_inferred": bool(f.get("kickoff_at")),
+            "league_not_confirmed": not liga_confirmada,
             "market_overround": round(suma_inv, 5),
         }
-        if not f["kickoff_text"]:
+        if not f.get("kickoff_at"):
             faltan_fechas += 1
+        if not liga_confirmada:
+            falta_categoria += 1
         validas.append(f)
 
     conteos = [d.get("eventos_con_1x2", 0) for d in diagnosticos]
@@ -243,7 +294,9 @@ def revisar_filas(filas: list[dict], diagnosticos: list[dict]) -> tuple[list[dic
     if len(conteos) > 1 and len(set(conteos)) == 1 and conteos[0] > 0:
         alertas.append("Todas las ligas devolvieron la misma cantidad de filas: revisar el listado.")
     if faltan_fechas:
-        alertas.append(f"{faltan_fechas} filas sin fecha/hora: NO aptas aún para cruce automático con fixtures.")
+        alertas.append(f"{faltan_fechas} filas sin fecha UTC confirmada: NO aptas aún para cruce automático con fixtures.")
+    if falta_categoria:
+        alertas.append(f"{falta_categoria} filas sin etiqueta de competición confirmada.")
     if solapadas:
         alertas.append(f"{len(solapadas)} cruces aparecen en varias categorías y fueron excluidos.")
     if any(d.get("estado") != "CUOTAS_1X2_DETECTADAS" for d in diagnosticos):
@@ -252,7 +305,8 @@ def revisar_filas(filas: list[dict], diagnosticos: list[dict]) -> tuple[list[dic
     return validas, {
         "partidos_leidos": len(filas), "partidos_aceptados": len(validas),
         "partidos_rechazados": dict(rechazadas),
-        "sin_fecha": faltan_fechas, "solapados_entre_ligas": len(solapadas),
+        "sin_fecha": faltan_fechas, "categoria_no_confirmada": falta_categoria,
+        "solapados_entre_ligas": len(solapadas),
         "alertas": alertas,
     }
 
@@ -326,7 +380,7 @@ def guardar_resultados(carpeta: Path, filas: list[dict], diags: list[dict], resu
     (carpeta / "diagnosticos.json").write_text(json.dumps(diags, indent=2, ensure_ascii=False), encoding="utf-8")
     (carpeta / "cuotas_1x2.json").write_text(json.dumps(filas, indent=2, ensure_ascii=False), encoding="utf-8")
     if filas:
-        columnas = ["league_code", "home_team", "away_team", "kickoff_text",
+        columnas = ["league_code", "home_team", "away_team", "kickoff_text", "kickoff_at",
                     "odd_home", "odd_draw", "odd_away", "market_p_home",
                     "market_p_draw", "market_p_away"]
         with (carpeta / "cuotas_1x2.csv").open("w", newline="", encoding="utf-8-sig") as file:
@@ -356,12 +410,14 @@ def main():
     api_request("karubet_ingest_runs?select=id&limit=1")
     capturado = hora_utc()
     filas, diagnosticos = asyncio.run(recolectar(carpeta))
-    validas, resumen = revisar_filas(filas, diagnosticos)
+    validas, resumen = revisar_filas(filas, diagnosticos, capturado)
     resumen["capturado_utc"] = capturado
     resumen["modo"] = "PERSISTIR_SUPABASE" if args.persist else "SOLO_DIAGNOSTICO"
     guardar_resultados(carpeta, validas, diagnosticos, resumen)
     print(json.dumps(resumen, ensure_ascii=False, indent=2), flush=True)
     if args.persist and validas:
+        if resumen["sin_fecha"] or resumen["categoria_no_confirmada"]:
+            sys.exit("Guardado bloqueado: hay filas sin fecha o competición verificadas.")
         run_id = persistir(validas, diagnosticos, resumen, capturado)
         print(f"Guardado en Supabase, run_id={run_id}")
     elif args.persist:
