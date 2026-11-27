@@ -6,9 +6,14 @@ ni el notebook original de KARUBET Match Centre.
 ## Programación
 
 GitHub Actions ejecuta `.github/workflows/karubet-1x2.yml` a los minutos
-**07 y 37 UTC** de cada hora: 48 ejecuciones programadas por día
+**07, 22, 37 y 52 UTC** de cada hora: hasta 96 ejecuciones programadas por día
 (*best effort*: GitHub puede retrasar u omitir ejecuciones).
-- Ejecución programada: guarda snapshots en Supabase.
+- Ejecución programada: guarda snapshots en Supabase sólo si el encuentro empieza
+  durante las siguientes **96 horas** (4 días), tiene liga y fecha verificadas,
+  y todavía no comenzó.
+- Aunque la lectura sigue consultando las cinco páginas web, sólo se escriben
+  partidos dentro de la ventana. Integrar el fixture maestro permitirá optimizar
+  posteriormente qué páginas se abren.
 - Ejecución manual `Run workflow`: por defecto es **solo lectura**.
 - Ejecución manual con `save_to_db=true`: guarda en Supabase.
 - Se puede pausar desde GitHub Actions → workflow → menú ⋯ → Disable workflow.
@@ -30,7 +35,7 @@ Datos en PostgreSQL:
   diferencia con última captura, cambio de probabilidad en puntos porcentuales,
   media y z-score en una ventana de 12 observaciones.
 
-Solo los partidos con fecha, liga y cuotas verificadas, **antes del inicio**,
+Solo los partidos con fecha, liga y cuotas verificadas, **dentro de las 96 horas antes del inicio**,
 se guardan en la base. Los datos dudosos se conservan en diagnósticos locales
 sin contaminar el historial. No se fabrican cuotas, fechas o equipos.
 Se evita relacionar partidos que aparecen en varias categorías.
@@ -41,10 +46,16 @@ implícita ≥1 punto porcentual. Son **alertas descriptivas**, no apuestas.
 
 ## Acceder a los resultados
 
-- **Actions → KARUBET - cuotas 1X2 cada 30 min → Run → Summary**.
+- **Actions → KARUBET - cuotas 1X2 cada 15 min → Run → Summary**.
 - Los artifacts de diagnósticos se suben en ejecuciones manuales o fallidas.
-- Los registros completos permanecen en la BD de Supabase hasta que
-  se aplique una política de retención/archivo.
+- El archivador diario `.github/workflows/karubet-archive.yml` consolida
+  **todos los partidos iniciados** en `public.karubet_event_archive`, con apertura,
+  cierre, mínimos, máximos, número de capturas y serie temporal completa de cuotas
+  como JSONB. Incluye campos vacíos para completar después el marcador real.
+- Por ahora se conservan también los snapshots originales. **No se eliminan
+  filas automáticamente** sin comprobar antes la integridad del archivo.
+- En el futuro, tras verificar la copia, podemos purgar datos crudos antiguos
+  o pasarlos a almacenamiento comprimido; no se guardarán únicamente ganadores.
 
 ## Investigación y siguientes etapas
 
