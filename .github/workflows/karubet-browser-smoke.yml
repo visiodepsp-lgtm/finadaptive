@@ -1,0 +1,37 @@
+name: KARUBET - prueba navegador Match Centre
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'karubet/web/tests/browser_smoke.py'
+      - '.github/workflows/karubet-browser-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar Chromium para prueba de navegador
+        run: |
+          python -m pip install playwright==1.56.0
+          python -m playwright install --with-deps chromium
+      - name: Abrir Hoja 1 y comprobar Fixture, Top y Detalle
+        run: python karubet/web/tests/browser_smoke.py
+      - name: Adjuntar captura de prueba
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: karubet-hoja-1-navegador
+          path: karubet/web/test-output/
+          if-no-files-found: ignore
+          retention-days: 7
