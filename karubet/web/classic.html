@@ -211,11 +211,34 @@ h1.karubet-headline span{color:var(--lime)}
 .team-search-status.show{display:flex}
 .team-search-status strong{color:#fff}
 @media(max-width:700px){.team-search{max-width:none;flex:1 1 100%;width:100%}.team-suggestions{max-height:305px}.filters{z-index:22}}
+
+/* Navegación propia, sin iframe: evita restricciones del navegador/Vercel */
+.classic-topbar{position:sticky;top:0;z-index:100;background:#081d11ee;border-bottom:1px solid #306644;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px clamp(14px,3vw,40px);backdrop-filter:blur(16px)}
+.classic-topbar .brand{font-weight:900;color:#83f3a5;font-size:17px}
+.classic-topbar .subbrand{display:block;color:#a8c5b0;font-size:11px;font-weight:400;margin-top:3px}
+.classic-links{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.classic-links a,.classic-links button{font:inherit;font-weight:700;font-size:13px;border:1px solid #396f4b;border-radius:12px;text-decoration:none;padding:9px 13px;color:#e3f7e9;background:#123824}
+.classic-links .active{background:#327850;color:#fff}
+#classicLiveStatus{font-size:11px;color:#c4cfa8;text-align:center;padding:9px 15px;background:#1a2e1f}
+#classicLiveStatus.ready{color:#8cf0ad}
+.classic-error{font-weight:650;font-size:15px;color:#f8ccaf}
+@media(max-width:600px){.classic-topbar{align-items:flex-start;flex-direction:column}.classic-links{gap:7px}.classic-links a,.classic-links button{font-size:11px;padding:7px 10px}}
+
 </style>
 <script src="/original-logo.js" defer></script>
 <script src="/classic-app.js" defer></script>
 </head>
 <body>
+<header class="classic-topbar">
+  <div class="brand">KARUBET 7.0 <span class="subbrand">Match Centre · Modelo original 6.3</span></div>
+  <div class="classic-links">
+    <a class="active" href="/classic.html" aria-current="page">01 · Probabilidades</a>
+    <a href="/?tab=market">02 · Market Centre</a>
+    <button id="classicRefresh" type="button">↻ Actualizar</button>
+    <button id="classicLogout" type="button">Salir</button>
+  </div>
+</header>
+<div id="classicLiveStatus" role="status">Comprobando acceso...</div>
 <main>
   <section class="hero karubet-hero">
     <div class="hero-card karubet-cover">
