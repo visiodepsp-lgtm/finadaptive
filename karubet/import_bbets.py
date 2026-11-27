@@ -74,7 +74,13 @@ def request(path, method="GET", body=None, raw=False, extra_headers=None, timeou
 
 
 def read_private_zip(filename):
-    payload = request(f"/storage/v1/object/{BUCKET}/{filename}", raw=True, timeout=160)
+    # Supabase Storage private bucket: authorised request with the server-side secret.
+    _, secret = endpoint()
+    payload = request(
+        f"/storage/v1/object/authenticated/{BUCKET}/{filename}",
+        raw=True, timeout=160,
+        extra_headers={"Authorization": "Bearer " + secret},
+    )
     if len(payload) > 50 * 1024 * 1024:
         raise ValueError("ZIP supera el límite de seguridad de 50 MB")
     if not zipfile.is_zipfile(io.BytesIO(payload)):
