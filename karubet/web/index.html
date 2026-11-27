@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07140f">
+  <meta name="description" content="KARUBET 7.0: probabilidades originales de fútbol y monitor de cuotas con rolling y tendencias.">
+  <title>KARUBET 7.0 · Probabilidades + Market Centre</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><div class="logo">K<span>7</span></div><div><strong>KARUBET <span class="brand-v">7.0</span></strong><small>Football Intelligence & Market Timing</small></div></div>
+    <div class="topright"><span class="pill" id="databaseState"><span class="dot"></span> Conectando</span><button class="ghost small" id="logout" type="button" hidden>Salir</button></div>
+  </header>
+  <main>
+    <div class="intro">
+      <div><p class="eyebrow">TERMINAL CUANTITATIVA DE FÚTBOL</p><h1>Un partido. Dos motores.</h1><p class="muted">Probabilidades reales KARUBET 6.3 y evolución de las cuotas L/E/V, en una misma plataforma.</p></div>
+      <div class="fresh"><span>FUENTE</span><strong>Supabase · KARUBET</strong><small id="freshStatus">Esperando conexión</small></div>
+    </div>
+
+    <div class="login-panel" id="loginPanel">
+      <div class="login-icon">🔐</div>
+      <div><h2>Acceso privado KARUBET</h2><p class="muted">Introduce el código de acceso de este panel. La clave de Supabase nunca se descarga en el navegador.</p></div>
+      <form id="loginForm"><label for="accessToken">Código de acceso</label><div class="login-line"><input id="accessToken" autocomplete="off" type="password" placeholder="Tu código KARUBET" required minlength="20"><button class="primary" type="submit">Conectar <span aria-hidden="true">→</span></button></div></form>
+      <p class="feedback" id="loginFeedback" role="status">La web necesita las variables privadas configuradas en Vercel para consultar los datos.</p>
+    </div>
+
+    <section id="workspace" hidden>
+      <div class="tabs" role="tablist" aria-label="Módulos KARUBET">
+        <button id="tabProbs" class="tab active" role="tab" aria-selected="true"><span class="tab-icon">▦</span> 01 · PROBABILIDADES <small>Modelo 6.3</small></button>
+        <button id="tabMarket" class="tab" role="tab" aria-selected="false"><span class="tab-icon">⌁</span> 02 · MARKET CENTRE <small>Timing de cuotas</small></button>
+      </div>
+
+      <section id="probPage" role="tabpanel">
+        <div class="kpis">
+          <div class="kpi"><span>FIXTURES EN CONSULTA</span><strong id="kpiMatches">—</strong><small>Temporada 2026/27</small></div>
+          <div class="kpi"><span>CON PROBABILIDADES</span><strong id="kpiPredicted">—</strong><small>PA / Quasi / Doble / Remontada</small></div>
+          <div class="kpi"><span>VERSIÓN DEL MODELO</span><strong id="kpiModel">6.3</strong><small>Parámetros originales conservados</small></div>
+          <div class="kpi"><span>ÚLTIMO RECÁLCULO</span><strong class="smallnum" id="kpiUpdated">—</strong><small>UTC · Ejecución semanal</small></div>
+        </div>
+
+        <div class="section-title"><div><p class="eyebrow">HOJA 01</p><h2>Match Centre · Probabilidades</h2><p>Busca un encuentro para revisar PA, Quasi PA, Doble PA, Remontada y sus componentes.</p></div><button class="ghost" id="refreshFixtures">↻ Actualizar</button></div>
+        <div class="tools">
+          <label>Equipo o partido<input type="search" id="matchSearch" placeholder="Ej. Napoli, Barcelona, Chelsea..."></label>
+          <label>Competición<select id="leagueSelect"><option value="">Todas las ligas</option><option value="epl">Premier League</option><option value="la-liga">La Liga</option><option value="serie-a">Serie A</option><option value="bundesliga">Bundesliga</option><option value="ligue-1">Ligue 1</option><option value="ucl">Champions League</option></select></label>
+          <label>Calendario<select id="daysSelect"><option value="14">Próximos 14 días</option><option value="45">Próximos 45 días</option><option value="90">Próximos 90 días</option><option value="210" selected>Temporada completa</option></select></label>
+        </div>
+        <div class="two-col">
+          <div class="panel listpanel"><div class="panelhead"><strong>Próximos partidos</strong><small id="fixtureCount">Cargando...</small></div><div class="matchlist" id="matchList"><div class="empty">Consulta de fixtures pendiente.</div></div><button id="loadMore" class="ghost loadmore" hidden>Cargar más partidos</button></div>
+          <div class="panel detailpanel" id="matchDetail"><div class="empty tall"><div class="empty-icon">⚽</div>Selecciona un partido para ver sus probabilidades originales.</div></div>
+        </div>
+      </section>
+
+      <section id="marketPage" role="tabpanel" hidden>
+        <div class="kpis">
+          <div class="kpi"><span>MERCADOS OBSERVADOS</span><strong id="marketMatches">—</strong><small>Cuotas con captura verificada</small></div>
+          <div class="kpi"><span>FRECUENCIA OBJETIVO</span><strong>15 min</strong><small>GitHub Actions · puede retrasarse</small></div>
+          <div class="kpi"><span>VENTANA DE CAPTURA</span><strong>96 h</strong><small>Antes del inicio</small></div>
+          <div class="kpi"><span>ESTADO DE SEÑALES</span><strong class="smallnum" id="modelSignalState">EN VALIDACIÓN</strong><small>Sin recomendaciones no calibradas</small></div>
+        </div>
+
+        <div class="section-title"><div><p class="eyebrow">HOJA 02</p><h2>Market Centre · Evolución de cuotas</h2><p>Prioridad Local y Visitante; Empate también se registra. Las cuotas son de Apuesta Total.</p></div><button class="ghost" id="refreshMarkets">↻ Actualizar</button></div>
+        <div class="market-grid">
+          <div class="panel listpanel"><div class="panelhead"><strong>Partidos con cuotas</strong><small id="marketCount">Cargando...</small></div><div id="marketList" class="matchlist"><div class="empty">Consulta de mercados pendiente.</div></div></div>
+          <div class="panel marketdetail">
+            <div class="market-head"><div><p class="eyebrow">SERIE PREPARTIDO</p><h3 id="marketName">Selecciona un partido</h3><span class="smallmuted" id="marketMeta">No se han seleccionado cuotas.</span></div><span class="tag" id="capturedAt">Sin captura</span></div>
+            <div class="price-row"><button data-side="L" class="price active" type="button"><small>LOCAL</small><strong id="quoteL">—</strong></button><button data-side="E" class="price" type="button"><small>EMPATE</small><strong id="quoteE">—</strong></button><button data-side="V" class="price" type="button"><small>VISITANTE</small><strong id="quoteV">—</strong></button></div>
+            <div class="rolling-tools"><span>Rolling</span><div class="segmented" id="rollingGroup"><button data-roll="3">3</button><button data-roll="6" class="active">6</button><button data-roll="12">12</button><button data-roll="24">24</button></div><small>Capturas, no horas</small></div>
+            <div class="graph" id="chartArea"><div class="empty">La evolución aparecerá cuando exista historial de al menos dos capturas.</div></div>
+            <div class="graph-legend"><span><i class="legend-price"></i>Cuota</span><span><i class="legend-avg"></i>Media móvil</span><span><i class="legend-band"></i>Bandas ±2σ</span></div>
+            <div class="stats" id="rollingStats"><div><small>MÁXIMO</small><strong>—</strong></div><div><small>MÍNIMO</small><strong>—</strong></div><div><small>CAMBIO ÚLTIMA CAPTURA</small><strong>—</strong></div><div><small>VOLATILIDAD ROLLING</small><strong>—</strong></div></div>
+            <div class="signal" id="decision"><span class="signal-tag">SIN SEÑAL FIABLE</span><p>Aún no hay un modelo de timing validado. La acción provisional es NO ENTRAR hasta comprobar los movimientos contra resultados futuros.</p></div>
+            <div class="history-wrap"><h4>Observaciones recientes</h4><div id="historyTable" class="empty slim">Sin historial disponible.</div></div>
+          </div>
+        </div>
+      </section>
+      <footer>KARUBET 7.0 · Probabilidades deportivas ≠ precios de mercado · Solo análisis prepartido · Los indicadores no garantizan ganancias.</footer>
+    </section>
+  </main>
+</body>
+</html>
