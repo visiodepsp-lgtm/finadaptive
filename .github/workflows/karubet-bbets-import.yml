@@ -1,0 +1,45 @@
+name: KARUBET - actualizar BBETS semanal
+
+on:
+  workflow_dispatch:
+    inputs:
+      dataset:
+        description: "Fuente ZIP a actualizar desde Supabase Storage"
+        required: true
+        default: BBETS_2026
+        type: choice
+        options:
+          - BBETS_2026
+          - BBETS_DATA
+          - all
+
+permissions:
+  contents: read
+
+concurrency:
+  group: karubet-bbets-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    name: Importación incremental y control de cambios
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Comprobar código importador
+        run: python -m py_compile karubet/import_bbets.py
+      - name: Actualizar únicamente registros nuevos o modificados
+        env:
+          IMPORT_DATASET: ${{ inputs.dataset }}
+        run: python karubet/import_bbets.py --dataset "$IMPORT_DATASET"
