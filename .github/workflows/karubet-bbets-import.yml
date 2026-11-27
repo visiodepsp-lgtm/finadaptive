@@ -1,6 +1,9 @@
 name: KARUBET - actualizar BBETS semanal
 
 on:
+  # Cada lunes tras una actualización semanal de ZIP en Storage.
+  schedule:
+    - cron: '17 7 * * 1'
   workflow_dispatch:
     inputs:
       dataset:
@@ -41,5 +44,5 @@ jobs:
         run: python -m py_compile karubet/import_bbets.py
       - name: Actualizar únicamente registros nuevos o modificados
         env:
-          IMPORT_DATASET: ${{ inputs.dataset }}
+          IMPORT_DATASET: ${{ github.event_name == 'schedule' && 'all' || inputs.dataset }}
         run: python karubet/import_bbets.py --dataset "$IMPORT_DATASET"
