@@ -60,6 +60,38 @@ async def main():
                     data={"items":[PREDICTION],"count":1,"model_count":1,
                           "asof":"2026-11-27T15:00:00+00:00",
                           "page_full":False,"days":210}
+                elif kind=="contexts":
+                    data={"items":[{
+                        "fixture_id":12345678,
+                        "source_snapshot_date":"2026-11-22",
+                        "context":{
+                            "home":"Napoli","away":"Inter","competition":"serie-a",
+                            "h_n":20,"a_n":20,"h_gf_5":1.8,"a_gf_5":1.5,
+                            "home_gf_ew10":1.9,"away_gf_ew10":1.4,
+                            "home_ga_ew10":0.8,"away_ga_ew10":1.1,
+                            "home_xgr_ew10":1.65,"away_xgr_ew10":1.33,
+                            "home_xgar_ew10":0.81,"away_xgar_ew10":1.09,
+                            "home_pts_ew10":2.1,"away_pts_ew10":1.4,
+                            "h2h_count":1,"h2h_evidence":0.85,
+                            "home_recent":[{
+                                "date":"2026-11-21","opponent":"Juventus",
+                                "venue":"A","score":"2–0","result":"W","xg":1.6,"xga":0.9
+                            }],
+                            "away_recent":[{
+                                "date":"2026-11-20","opponent":"Roma",
+                                "venue":"H","score":"1–1","result":"D","xg":1.2,"xga":1.3
+                            }],
+                            "h2h_matches":[{
+                                "date":"2026-03-10","competition":"serie-a",
+                                "home":"Inter","away":"Napoli","score":"1–2",
+                                "weight":0.85,"pa":1,"qpa":1,"dpa":0,"rem":0,
+                                "pa_team":"Napoli",
+                                "minutes":{"pa":"70","qpa":"85","dpa":None,"rem":None},
+                                "goal_sequence":[["12","h"],["70","a"],["85","a"]],
+                                "minute_source":"Understat"
+                            }]
+                        }
+                    }],"count":1,"snapshot_date":"2026-11-22"}
                 elif kind=="markets":
                     data={"items":[{
                         "league_code":"74","home_team":"Napoli","away_team":"Inter",
@@ -109,6 +141,15 @@ async def main():
             await page.locator("#content [data-id]").first.click()
             detail=await page.locator("#content").inner_text()
             assert "Napoli" in detail and "Inter" in detail
+            assert "Juventus" in detail and "Roma" in detail, (
+                "Faltan partidos recientes originales: "+detail[-1500:])
+            assert "Sin resultados recientes disponibles" not in detail
+            assert "No hay enfrentamientos directos oficiales disponibles" not in detail
+            assert "2026-11-22" in await page.locator("#classicLiveStatus").inner_text()
+            await page.get_by_text("Ver estadísticas y comparación de enfoques").click()
+            factor=await page.locator("#content").inner_text()
+            assert "Goles a favor" in factor and "1.90" in factor, factor[-1800:]
+            print("Forma reciente, H2H, factores y fecha de corte originales restaurados: OK")
             print("Análisis por partido: OK")
             OUT.parent.mkdir(parents=True,exist_ok=True)
             await page.screenshot(path=str(OUT),full_page=True)
