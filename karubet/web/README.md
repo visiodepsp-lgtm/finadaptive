@@ -15,10 +15,11 @@ No reemplaza ni modifica el index.html ni el despliegue actual de FinAdaptive.
 ## Seguridad
 - Todas las solicitudes a Supabase se hacen desde la función privada
   api/data.py; la clave sb_secret_ se mantiene exclusivamente en Vercel.
-- El frontend solicita un token de acceso largo, guardado sólo en
-  sessionStorage y enviado a /api/data en el encabezado Authorization.
-- Si falta alguna variable privada, el backend devuelve HTTP 503,
-  sin filtrar datos.
+- El panel es público de solo lectura y no exige contraseña.
+- Cualquier persona que conozca la URL puede consultar partidos, cuotas
+  históricas y predicciones mostradas por esta API. No usar para material privado.
+- La clave de Supabase nunca se entrega al navegador.
+- Si falta la clave privada del servidor, el backend devuelve HTTP 503.
 - La API es solo lectura y dispone de lista estricta de tablas
   autorizadas, sin ejecución SQL ni escrituras.
 - RLS sigue activada en Supabase; anon no puede leer esas tablas.
@@ -26,16 +27,21 @@ No reemplaza ni modifica el index.html ni el despliegue actual de FinAdaptive.
 ## Variables Vercel (Production, Preview)
 - SUPABASE_URL = https://pryrwgpfunxcwfifsaei.supabase.co (config)
 - SUPABASE_SECRET_KEY = clave sb_secret_ del proyecto (SECRET)
-- KARUBET_ACCESS_TOKEN = token aleatorio de longitud >= 20 (SECRET)
+- KARUBET_ACCESS_TOKEN ya no se utiliza (opcional eliminarla en Vercel).
 Los secretos del repositorio GitHub Actions NO se copian automáticamente
 a Vercel. Nunca compartirlos en GitHub ni en el HTML.
 Tras crear/actualizar variables, hacer un redeploy.
 
 ## Datos actuales
 - Hoja 1: 1.204 predicciones originales 6.3 en Supabase (al 27/11/2026).
-- Hoja 2: 0 snapshots 1X2 guardados al iniciar esta fase.
-  Revisar Github Actions, capturas válidas y fixture-alias antes
-  de automatizar las señales.
+- Hoja 2: 78 snapshots en 39 partidos, dos capturas verificadas
+  al 27/11/2026, sujeto a actualización por cron cada 15 min.
+  Las ejecuciones programadas de GitHub pueden demorarse u omitirse.
+- Market Centre: watchlist densa con filtros de liga y autocompletado
+  de equipos, gráfico con cursor, MA rolling, banda, estadísticas y tape.
+- Escudos de 96 clubes 2026/27 procedentes del proyecto público
+  luukhopman/football-logos. Las marcas son de sus respectivos clubes;
+  se muestra fallback textual cuando no existe correspondencia revisada.
 - Para vincular Hoja 1 y Hoja 2 se utiliza la tabla
   karubet_fixture_odds_links, sólo con enlaces revisados.
 
@@ -44,7 +50,8 @@ Tras crear/actualizar variables, hacer un redeploy.
 - GET /api/data?kind=markets
 - GET /api/data?kind=history&league=24&home=Chelsea&away=Arsenal&kickoff=...
 - GET /api/data?kind=linked&fixture_id=123
-Todas exigen encabezado Authorization: Bearer <KARUBET_ACCESS_TOKEN>.
+No exigen un encabezado Authorization. Su uso es público y de solo lectura;
+los parámetros, tablas, campos y límites están restringidos por el backend.
 
 No utilizar estos indicadores para invertir dinero real hasta que
 un modelo de timing sea validado fuera de muestra.
