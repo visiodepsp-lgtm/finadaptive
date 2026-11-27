@@ -450,7 +450,7 @@ function renderHistory() {
   const max = Math.max(...values, ...stats.map(r=>r.top));
   const margin = Math.max(.04, (max-min)*.09);
   const low = Math.max(1, min-margin), high = max+margin;
-  const width=940,height=302,left=62,right=22,top=23,bottom=43;
+  const width=940,height=490,left=62,right=22,top=23,bottom=50;
   const x = i=>left+(values.length===1 ? (width-left-right)/2 : i*(width-left-right)/(values.length-1));
   const y = v=>top+(high-v)*(height-top-bottom)/(high-low);
   const grid = Array.from({length:5}, (_,i)=>{
@@ -471,6 +471,37 @@ function renderHistory() {
     '<circle cx="'+x(values.length-1)+'" cy="'+y(values[values.length-1])+'" r="4.3" fill="#74e9a1"/>' +
     '<text x="'+left+'" y="'+(height-12)+'">'+first+'</text>' +
     '<text x="'+(width-right)+'" y="'+(height-12)+'" text-anchor="end">'+last+'</text></svg>';
+  // Crosshair de trading: inspección puntual sin interpolar cuotas inventadas.
+  const svg=$("chartArea").querySelector("svg");
+  const ns="http://www.w3.org/2000/svg";
+  const guide=document.createElementNS(ns,"line");
+  guide.setAttribute("stroke","#7f9baa");
+  guide.setAttribute("stroke-width","1");
+  guide.setAttribute("stroke-dasharray","4 5");
+  guide.style.display="none";
+  svg.append(guide);
+  const marker=document.createElementNS(ns,"circle");
+  marker.setAttribute("r","5");
+  marker.setAttribute("fill","#72e1af");
+  marker.style.display="none";
+  svg.append(marker);
+  svg.addEventListener("pointermove",e=>{
+    const rect=svg.getBoundingClientRect();
+    const nx=Math.max(0,Math.min(1,(e.clientX-rect.left)/rect.width));
+    const coord=nx*width;
+    const idx=values.length===1?0:Math.max(0,Math.min(values.length-1,
+      Math.round((coord-left)/(width-left-right)*(values.length-1))));
+    const xx=x(idx),yy=y(values[idx]);
+    guide.setAttribute("x1",String(xx));guide.setAttribute("x2",String(xx));
+    guide.setAttribute("y1",String(top));guide.setAttribute("y2",String(height-bottom));
+    marker.setAttribute("cx",String(xx));marker.setAttribute("cy",String(yy));
+    guide.style.display=marker.style.display="";
+    $("crosshairReadout").textContent=when(rows[idx].captured_at)+" · CUOTA "+num(values[idx]);
+  });
+  svg.addEventListener("pointerleave",()=>{
+    guide.style.display=marker.style.display="none";
+    $("crosshairReadout").textContent="Desliza sobre la curva para inspeccionar";
+  });
   const lastValue = values[values.length-1],prev = values.length>1 ? values[values.length-2] : null;
   const delta = prev === null ? null : 100*(lastValue/prev-1);
   const statsEl = $("rollingStats");
