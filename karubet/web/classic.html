@@ -224,19 +224,53 @@ h1.karubet-headline span{color:var(--lime)}
 .classic-error{font-weight:650;font-size:15px;color:#f8ccaf}
 @media(max-width:600px){.classic-topbar{align-items:flex-start;flex-direction:column}.classic-links{gap:7px}.classic-links a,.classic-links button{font-size:11px;padding:7px 10px}}
 
+
+/* Navegación fluida KARUBET 7 · diseño común en ambas hojas */
+@view-transition{navigation:auto}
+html{scroll-behavior:smooth}
+.classic-topbar{
+  min-height:68px;background:linear-gradient(90deg,rgba(8,28,21,.98),rgba(8,33,30,.97));
+  border-bottom:1px solid #2d6250;box-shadow:0 10px 24px #00000022;
+}
+.classic-topbar .brand{display:flex;align-items:center;gap:12px}
+.classic-topbar .brand-v{color:#70edb0}
+.classic-brand-logo{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 3px 4px #0006);view-transition-name:karubet-logo}
+.classic-links{gap:6px}
+.classic-links a,.classic-links button{border:1px solid #315c4d;background:#143527;
+  font-size:12px;padding:10px 13px;border-radius:8px;transition:background .16s ease,color .16s ease,border .16s ease,transform .16s ease}
+.classic-links a:hover,.classic-links button:hover{background:#1b5441;border-color:#70cdaa;transform:translateY(-1px)}
+.classic-links .active{background:#205942;border-color:#68c995;color:#b9ffdc}
+.classic-market-shortcut{display:none!important}
+.classic-brand{view-transition-name:karubet-brand}
+.classic-topbar{view-transition-name:karubet-header}
+@keyframes karubet-fade-in{from{opacity:.3;filter:blur(3px);transform:translateY(7px)}to{opacity:1;filter:blur(0);transform:translateY(0)}}
+@keyframes karubet-fade-out{to{opacity:.25;transform:translateY(-3px)}}
+::view-transition-old(root){animation:130ms ease-out both karubet-fade-out}
+::view-transition-new(root){animation:250ms ease-out both karubet-fade-in}
+::view-transition-old(karubet-header),::view-transition-new(karubet-header){animation-duration:200ms}
+::view-transition-old(karubet-logo),::view-transition-new(karubet-logo){animation-duration:180ms}
+main{animation:karubet-fade-in .23s ease-out both}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto} main{animation:none}
+  ::view-transition-old(root),::view-transition-new(root),
+  ::view-transition-old(karubet-header),::view-transition-new(karubet-header),
+  ::view-transition-old(karubet-logo),::view-transition-new(karubet-logo){animation:none}
+}
+
 </style>
+<link rel="prefetch" href="/?tab=market" as="document">
 <script src="/original-logo.js" defer></script>
 <script src="/team-crests.js" defer></script>
 <script src="/classic-app.js" defer></script>
 </head>
 <body>
 <header class="classic-topbar">
-  <div class="brand">KARUBET 7.0 <span class="subbrand">Match Centre · Modelo original 6.3</span></div>
+  <div class="brand classic-brand"><img class="classic-brand-logo" data-karubet-logo="original" alt="Logo KARUBET" src="" width="44" height="44"><div>KARUBET <span class="brand-v">7.0</span><span class="subbrand">Football Intelligence & Market Timing</span></div></div>
   <div class="classic-links">
     <a class="active" href="/classic.html" aria-current="page">01 · Probabilidades</a>
     <a href="/?tab=market">02 · Market Centre</a>
     <button id="classicRefresh" type="button">↻ Actualizar</button>
-    <button id="classicLogout" type="button">Ir al mercado</button>
+    <button id="classicLogout" type="button" class="classic-market-shortcut">Mercados →</button>
   </div>
 </header>
 <div id="classicLiveStatus" role="status">Comprobando acceso...</div>
