@@ -253,6 +253,62 @@ async function classicFetchFixtures(offset) {
   }
   return res.json();
 }
+/* Contexto exacto exportado por el notebook original.
+   No reemplazar probabilidades recalculadas ni reconstruir cronologías. */
+async function classicFetchContexts(ids){
+  const u=new URL("/api/data",location.origin);
+  u.searchParams.set("kind","contexts");
+  u.searchParams.set("ids",ids.join(","));
+  const res=await fetch(u.pathname+u.search,{cache:"no-store"});
+  if(!res.ok){
+    let error={};
+    try{error=await res.json();}catch{}
+    throw new Error(error.message||"No se pudo recuperar el historial original (HTTP "+res.status+").");
+  }
+  const value=await res.json();
+  if(!Array.isArray(value.items))throw new Error("Respuesta de contexto original inválida.");
+  return value.items;
+}
+async function loadOriginalContexts(rows,status){
+  const groups=[];
+  for(let i=0;i<rows.length;i+=75)groups.push(rows.slice(i,i+75).map(r=>r.fixture_id));
+  const result=new Map();
+  let done=0;
+  // Concurrencia limitada: respeta Supabase y Vercel.
+  for(let i=0;i<groups.length;i+=4){
+    const pages=await Promise.all(groups.slice(i,i+4).map(ids=>classicFetchContexts(ids)));
+    for(const entries of pages){
+      for(const entry of entries){
+        if(!entry||!Number.isSafeInteger(Number(entry.fixture_id)))continue;
+        result.set(Number(entry.fixture_id),entry);
+      }
+    }
+    done+=pages.length;
+    status.textContent="Recuperando forma y H2H originales: "+done+"/"+groups.length+" tandas...";
+  }
+  const protectedKeys=new Set([
+    "fixture_id","home","away","competition","dia","hora","hora_confirmada",
+    "lambda_h","lambda_a","ewma_pa","ewma_qpa","ewma_dpa","ewma_rem",
+    "h2h_pa","h2h_qpa","h2h_dpa","h2h_rem",
+    "original_pa","original_qpa","original_dpa","original_rem"
+  ]);
+  let restored=0,h2h=0,latestOriginal=null;
+  for(const row of rows){
+    const record=result.get(Number(row.fixture_id));
+    if(!record || !record.context)continue;
+    const c=record.context;
+    // Unir por ID + nombre exacto de ambos equipos y liga: no mezclar partidos.
+    if(c.home!==row.home || c.away!==row.away || c.competition!==row.competition)continue;
+    for(const [key,value] of Object.entries(c)){
+      if(!protectedKeys.has(key))row[key]=value;
+    }
+    restored++;
+    if(Array.isArray(row.h2h_matches)&&row.h2h_matches.length)h2h++;
+    if(record.source_snapshot_date && (!latestOriginal||record.source_snapshot_date>latestOriginal))
+      latestOriginal=record.source_snapshot_date;
+  }
+  return {restored,h2h,sourceDate:latestOriginal};
+}
 function classicViewRow(f){
   const p=f.model.probabilities||{},m=f.model.metrics||{};
   const dt=classicDateParts(f.kickoff_at);
@@ -297,6 +353,11 @@ async function loadClassicStandalone(){
       if(f.model.generated_at && (!latest||f.model.generated_at>latest))
         latest=f.model.generated_at;
     }
+    const restored=await loadOriginalContexts(rows,status);
+    if(rows.length && restored.restored<rows.length*0.8){
+      throw new Error("Solo se restauró "+restored.restored+"/"+rows.length+
+        " fichas originales. Verifica las referencias del fixture y los datos de Supabase.");
+    }
     const today=classicDateParts(new Date().toISOString()).date;
     const updated=latest?new Intl.DateTimeFormat("es-PE",{
       timeZone:"America/Lima",dateStyle:"medium",timeStyle:"short"
@@ -304,10 +365,13 @@ async function loadClassicStandalone(){
     // El motor visual clásico se conserva íntegro; solo cambia el origen del dataset.
     startClassic({
       rows,logos:{},league_logos:{},
-      meta:{today,asof:updated,source_date:"Supabase · KARUBET 6.3",
+      meta:{today,asof:updated,
+            source_date:"Modelo en Supabase · contexto histórico original "+(restored.sourceDate||"2026-11-22"),
             fresh:Boolean(latest)}
     });
-    status.textContent="Supabase conectado · "+rows.length+" predicciones · "+updated;
+    status.textContent="Supabase · "+rows.length+" predicciones · "+restored.restored+
+      " contextos históricos · "+restored.h2h+" con H2H · corte "+(restored.sourceDate||"2026-11-22")+
+      " · modelo "+updated;
     status.classList.add("ready");
   }catch(error){
     status.textContent="No se pudieron cargar las probabilidades";
