@@ -315,7 +315,14 @@ async function loadMarkets() {
     const before = state.selectedMarket;
     state.markets = data.items || [];
     $("marketMatches").textContent = state.markets.length;
-    $("marketCount").textContent = state.markets.length + " mercados · lectura " + when(data.asof);
+    const newest = state.markets
+      .map(m => Date.parse(m.captured_at)).filter(v => Number.isFinite(v))
+      .reduce((a,b) => Math.max(a,b),0);
+    const ageMinutes = newest ? Math.floor((Date.now()-newest)/60000) : null;
+    $("marketCount").textContent = state.markets.length + " mercados · " +
+      (newest ? "última cuota " + when(new Date(newest).toISOString()) +
+        (ageMinutes > 45 ? " · ⚠ cuota antigua (" + ageMinutes + " min)" : "") :
+        "sin captura verificada");
     const match = before && state.markets.find(m =>
       m.league_code===before.league_code && m.home_team===before.home_team &&
       m.away_team===before.away_team && m.kickoff_at===before.kickoff_at);
