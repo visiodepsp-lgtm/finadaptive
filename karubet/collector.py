@@ -413,15 +413,40 @@ def main():
     validas, resumen = revisar_filas(filas, diagnosticos, capturado)
     resumen["capturado_utc"] = capturado
     resumen["modo"] = "PERSISTIR_SUPABASE" if args.persist else "SOLO_DIAGNOSTICO"
+    # Los snapshots productivos son PREPARTIDO: no mezclar con precios in-play.
+    # Si una fila está incompleta, conservarla en el reporte pero excluirla de Supabase.
+    aptas = []
+    desde = datetime.fromisoformat(capturado)
+    descartes = Counter()
+    for fila in validas:
+        flags = fila.get("quality_flags", {})
+        if flags.get("league_not_confirmed"):
+            descartes["competicion_no_verificada"] += 1
+            continue
+        if not fila.get("kickoff_at"):
+            descartes["inicio_sin_fecha_verificada"] += 1
+            continue
+        if datetime.fromisoformat(fila["kickoff_at"]) <= desde:
+            descartes["inicio_ya_comenzado"] += 1
+            continue
+        aptas.append(fila)
+    resumen["partidos_aptos_prepartido"] = len(aptas)
+    resumen["descartados_para_bd"] = dict(descartes)
+    if descartes:
+        resumen["alertas"].append(
+            f"{sum(descartes.values())} filas retenidas en diagnostico, pero no guardadas en BD."
+        )
     guardar_resultados(carpeta, validas, diagnosticos, resumen)
     print(json.dumps(resumen, ensure_ascii=False, indent=2), flush=True)
-    if args.persist and validas:
-        if resumen["sin_fecha"] or resumen["categoria_no_confirmada"]:
-            sys.exit("Guardado bloqueado: hay filas sin fecha o competición verificadas.")
-        run_id = persistir(validas, diagnosticos, resumen, capturado)
-        print(f"Guardado en Supabase, run_id={run_id}")
+    if args.persist and aptas:
+        # Cada ejecución crea un run_id independiente: retenemos también cuotas sin cambio.
+        run_id = persistir(aptas, diagnosticos, resumen, capturado)
+        print(f"Guardados {len(aptas)} snapshots prepartido en Supabase, run_id={run_id}")
     elif args.persist:
-        print("Sin partidos verificados: no se escribe un snapshot vacío.")
+        print("Ningún partido prepartido validado: no se escribe un snapshot vacío.")
+        # Un sitio sin datos puede reflejar un problema transitorio; reportar fallo de ejecución.
+        if validas or any(d.get("estado") not in ("CUOTAS_1X2_DETECTADAS",) for d in diagnosticos):
+            sys.exit("Sin partidas aptas para guardar: revisar diagnosticos.")
     else:
         print("Prueba de solo lectura completada: NO se ha escrito ningún dato.")
     if not validas:
