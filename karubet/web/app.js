@@ -128,7 +128,10 @@ window.addEventListener("message",event=>{
   if(event.data.type==="KARUBET_CLASSIC_READY"){sendClassicData();}
   else if(event.data.type==="KARUBET_CLASSIC_HEIGHT"){
     const height=Number(event.data.height);
-    if(Number.isFinite(height)&&height>=300&&height<=80000)
+    // Evita bucles ResizeObserver: al crecer el iframe, el scrollHeight
+    // del documento hijo puede incluir el nuevo viewport.
+    if(Number.isFinite(height)&&height>=300&&height<=80000 &&
+       Math.abs(frame.clientHeight - (height+12)) > 28)
       frame.style.height=Math.ceil(height+12)+"px";
   }else if(event.data.type==="KARUBET_CLASSIC_SELECT"){
     const id=Number(event.data.fixture_id);
