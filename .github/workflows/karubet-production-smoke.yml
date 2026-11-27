@@ -6,6 +6,10 @@ on:
       - main
     paths:
       - '.github/workflows/karubet-production-smoke.yml'
+      - 'karubet/web/team-crests.js'
+      - 'karubet/web/classic.html'
+      - 'karubet/web/styles.css'
+      - 'karubet/web/app.js'
   workflow_dispatch:
 
 permissions:
@@ -27,12 +31,14 @@ jobs:
           for attempt in range(24):
               try:
                   outputs={}
-                  for path in ('/','/classic.html','/classic-app.js'):
+                  for path in ('/','/classic.html','/classic-app.js','/team-crests.js','/styles.css'):
                       with urllib.request.urlopen(urllib.request.Request(
                           root+path,headers={'User-Agent':'KARUBET-public-healthcheck/2.0'}
                       ),timeout=12) as res:
                           outputs[path]=(res.status,res.headers,res.read().decode('utf-8','replace'))
                   classic=outputs['/classic.html']
+                  assets=outputs['/team-crests.js'][2]
+                  styles=outputs['/styles.css'][2]
                   index=outputs['/']
                   script=outputs['/classic-app.js']
                   with urllib.request.urlopen(urllib.request.Request(
@@ -51,9 +57,16 @@ jobs:
                       'KARUBET' in classic[2] and
                       api_status==200 and isinstance(api_data.get('items'),list) and
                       '<script defer src="/team-crests.js"' in index[2] and
-                      'marketSearch' in index[2])
+                      'marketSearch' in index[2] and
+                      'marketLeaguePills' in index[2] and
+                      'marketFreshness' in index[2] and
+                      'KARUBET_LEAGUE_CREST' in assets and
+                      'league_premier-league.png' in assets and
+                      'league_serie-a.png' in assets and
+                      'view-transition-name:karubet-header' in styles and
+                      '10 MIN' in index[2])
                   if ok:
-                      print('PUBLICACIÓN CORRECTA: sin contraseña, dos hojas, escudos y filtros de mercado.')
+                      print('PUBLICACIÓN CORRECTA: logos de liga, 10min, transición compartida, salud de mercado y API pública.')
                       break
                   last=f"HTTP={[o[0] for o in outputs.values()]}; XFO={xfo}; independiente={ok}"
               except (urllib.error.URLError,TimeoutError) as err:
