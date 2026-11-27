@@ -1,6 +1,7 @@
 """Pruebas locales del filtro de calidad; no hacen llamadas a red."""
 import unittest
 from collector import revisar_filas, probabilidades_mercado, completar_fecha
+from report_movements import calcular_movimientos
 
 
 def fila(liga="74", home="Nottingham Forest", away="Chelsea", fecha=None,
@@ -61,6 +62,24 @@ class PruebasCalidad(unittest.TestCase):
         r["raw_excerpt"] = "08/12 • 12:45 Ligue 1 Brest Paris FC 3.30 Empate 3.40"
         completar_fecha(r, "2026-11-27T01:05:15+00:00")
         self.assertEqual(r["kickoff_at"], "2026-12-08T17:45:00+00:00")
+
+
+    def test_alerta_solo_con_dos_capturas_de_mismo_partido(self):
+        primera = {
+            "id": 1, "league_code": "24", "home_team": "Chelsea",
+            "away_team": "Liverpool", "kickoff_at": "2026-11-29T15:00:00+00:00",
+            "captured_at": "2026-11-28T08:07:00+00:00",
+            "odd_home": 2.5, "odd_draw": 3.4, "odd_away": 2.8,
+            "market_p_home": 0.39, "market_p_draw": 0.28, "market_p_away": 0.33,
+        }
+        segunda = dict(
+            primera, id=2, captured_at="2026-11-28T08:37:00+00:00",
+            odd_home=2.7, market_p_home=0.365,
+        )
+        self.assertEqual(calcular_movimientos([primera]), [])
+        alertas = calcular_movimientos([segunda, primera])
+        self.assertTrue(any(a["lado"] == "L" and a["descripcion"] == "CUOTA_SUBE"
+                            and a["cambio_probabilidad_pp"] == -2.5 for a in alertas))
 
     def test_rechazar_margen_inverosimil(self):
         validas, resumen = revisar_filas([fila(cuotas=(1.03, 1.04, 1.05))], [])
