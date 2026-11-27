@@ -55,3 +55,16 @@ los parámetros, tablas, campos y límites están restringidos por el backend.
 
 No utilizar estos indicadores para invertir dinero real hasta que
 un modelo de timing sea validado fuera de muestra.
+
+## Match Centre 6.3: restauración del contexto histórico
+- Tabla `karubet_fixture_context_original`: 1.207 filas restauradas de
+  `KARUBET_Match_Centre_6_3_limpio (2).html`, snapshot del 22/11/2026.
+- Enlaza por `fixture_id` y valida también nombre de ambos equipos y liga.
+- Forma de ambos equipos y factores observados disponibles en 1.204 de
+  1.204 predicciones; H2H disponibles en 1.126 de esas predicciones.
+- El frontend solicita el contexto en tandas de hasta 75 IDs a
+  `GET /api/data?kind=contexts&ids=ID1,ID2,...` sin exponer claves.
+- No se alteró el objeto de probabilidades del modelo 6.3.
+- Importante: se trata de una foto histórica, no de un recálculo de
+  forma/H2H posterior al 22/11/2026. La actualización semanal de estas
+  fichas exige regenerarlas desde el motor original y subir una nueva versión.
