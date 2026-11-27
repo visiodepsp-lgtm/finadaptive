@@ -3,7 +3,7 @@
 
 const $ = id => document.getElementById(id);
 const state = {
-  token: sessionStorage.getItem("karubet_access") || "",
+  token: null,
   fixtures: [], fixtureOffset: 0, fixtureDone: false, selectedFixture: null,
   markets: [], selectedMarket: null, history: [], side: "L", rolling: 6,
   lastModelDate: null
@@ -45,8 +45,7 @@ async function request(kind, args={}) {
   try {
     response = await fetch("/api/data?" + query.toString(), {
       method: "GET",
-      cache: "no-store",
-      headers: {"Authorization": "Bearer " + state.token}
+      cache: "no-store"
     });
   } catch {
     throw new Error("No se pudo contactar al servidor de KARUBET.");
@@ -319,15 +318,15 @@ async function loadMarkets() {
     const data = await request("markets");
     const before = state.selectedMarket;
     state.markets = data.items || [];
+    renderMarketSuggestions();
     $("marketMatches").textContent = state.markets.length;
     const newest = state.markets
       .map(m => Date.parse(m.captured_at)).filter(v => Number.isFinite(v))
       .reduce((a,b) => Math.max(a,b),0);
     const ageMinutes = newest ? Math.floor((Date.now()-newest)/60000) : null;
-    $("marketCount").textContent = state.markets.length + " mercados · " +
-      (newest ? "última cuota " + when(new Date(newest).toISOString()) +
-        (ageMinutes > 45 ? " · ⚠ cuota antigua (" + ageMinutes + " min)" : "") :
-        "sin captura verificada");
+    $("marketCount").textContent=state.markets.length+" mercados · "+(
+      newest ? "última captura "+when(new Date(newest).toISOString())+
+      (ageMinutes>45?" · ⚠ desactualizada "+ageMinutes+" min":""):"sin capturas");
     const match = before && state.markets.find(m =>
       m.league_code===before.league_code && m.home_team===before.home_team &&
       m.away_team===before.away_team && m.kickoff_at===before.kickoff_at);
@@ -338,24 +337,61 @@ async function loadMarkets() {
     $("marketList").innerHTML = '<div class="empty">' + escapeHTML(e.message) + '</div>';
   }
 }
+function normalizeClub(value) {
+  return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+}
+function marketFiltered(){
+  const league=$("marketLeague").value;
+  const query=normalizeClub($("marketSearch").value);
+  return state.markets.filter(m=>(!league||String(m.league_code)===league)&&
+    (!query||normalizeClub(m.home_team+" "+m.away_team).includes(query)));
+}
+function teamCrestHtml(name,league,cls="team-crest"){
+  const url=window.KARUBET_TEAM_CREST?.(name,league);
+  const initials=name.split(/\s+/).slice(0,2).map(x=>x[0]||"").join("").toUpperCase();
+  return '<span class="'+cls+'">'+(url?'<img loading="lazy" alt="" src="'+escapeHTML(url)+'">':
+    '<span class="crest-fallback">'+escapeHTML(initials)+'</span>')+'</span>';
+}
+function renderMarketSuggestions(){
+  const datalist=$("marketSuggestions");
+  const league=$("marketLeague").value;
+  const input=normalizeClub($("marketSearch").value);
+  const items=new Set();
+  for(const m of state.markets){
+    if(league&&String(m.league_code)!==league)continue;
+    for(const name of [m.home_team,m.away_team])
+      if(!input||normalizeClub(name).includes(input))items.add(name);
+  }
+  datalist.replaceChildren();
+  [...items].sort((a,b)=>a.localeCompare(b,"es")).slice(0,50).forEach(name=>{
+    const item=document.createElement("option");item.value=name;datalist.append(item);
+  });
+}
 function renderMarkets() {
-  const container = $("marketList");
+  const container=$("marketList");
   container.replaceChildren();
-  if (!state.markets.length) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon">⌁</div>Todavía no hay cuotas persistidas en Supabase. El recolector programado debe guardar al menos una captura válida antes de generar gráficas.</div>';
+  const items=marketFiltered();
+  $("marketCount").textContent=items.length+" de "+state.markets.length+" mercados · "+(
+    state.markets.length?"Filtra por liga o escribe un equipo":"sin capturas");
+  if(!items.length){
+    container.innerHTML='<div class="empty">No hay mercados con esta búsqueda. Prueba otra liga o equipo.</div>';
     return;
   }
-  const fragment = document.createDocumentFragment();
-  for (const m of state.markets) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "match" + (m === state.selectedMarket ? " active" : "");
-    btn.innerHTML = '<span><span class="match-title">' + escapeHTML(m.home_team) +
-      ' <span style="color:#ecca70">vs</span> ' + escapeHTML(m.away_team) +
-      '</span><span class="match-meta">' + escapeHTML(LEAGUES[m.league_code] || m.league_code) +
-      ' · ' + escapeHTML(when(m.kickoff_at)) + '</span></span>' +
-      '<span class="match-badge">' + num(m.odd_home) + ' / ' + num(m.odd_away) + '</span>';
-    btn.addEventListener("click", () => selectMarket(m));
+  const fragment=document.createDocumentFragment();
+  for(const m of items){
+    const btn=document.createElement("button");
+    btn.type="button";
+    btn.className="market-line"+(m===state.selectedMarket?" active":"");
+    btn.setAttribute("role","listitem");
+    btn.innerHTML='<span class="market-line-team"><span class="team-line-names">'+
+      '<span class="team-line-name">'+teamCrestHtml(m.home_team,m.league_code)+escapeHTML(m.home_team)+'</span>'+
+      '<span class="team-line-name">'+teamCrestHtml(m.away_team,m.league_code)+escapeHTML(m.away_team)+'</span>'+
+      '<small>'+escapeHTML(when(m.kickoff_at))+'</small></span></span>'+
+      '<span class="market-line-price">'+num(m.odd_home)+'</span>'+
+      '<span class="market-line-price">'+num(m.odd_draw)+'</span>'+
+      '<span class="market-line-price">'+num(m.odd_away)+'</span>';
+    btn.addEventListener("click",()=>selectMarket(m));
     fragment.append(btn);
   }
   container.append(fragment);
@@ -364,7 +400,9 @@ async function selectMarket(m) {
   state.selectedMarket = m;
   state.history = [];
   renderMarkets();
-  $("marketName").textContent = m.home_team + " vs " + m.away_team;
+  $("marketName").innerHTML=teamCrestHtml(m.home_team,m.league_code,"terminal-hero-crest")+
+    '<span>'+escapeHTML(m.home_team)+' <i>vs</i> '+escapeHTML(m.away_team)+'</span>'+
+    teamCrestHtml(m.away_team,m.league_code,"terminal-hero-crest");
   $("marketMeta").textContent = (LEAGUES[m.league_code] || m.league_code) + " · " + when(m.kickoff_at);
   $("capturedAt").textContent = "Capturada " + when(m.captured_at);
   $("quoteL").textContent = num(m.odd_home);
@@ -464,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // El servidor registra cada 15m. La interfaz revisa novedades cada 2m
   // mientras el usuario tenga visible la Hoja 2, sin recargar la página.
   setInterval(()=>{
-    if(state.token && !document.hidden && !$("marketPage").hidden) loadMarkets();
+    if(!document.hidden && !$("marketPage").hidden) loadMarkets();
   },120000);
   $("loadMore").addEventListener("click",()=>loadFixtures(false).catch(e=>{alert(e.message);}));
   $("daysSelect").addEventListener("change",()=>loadFixtures(true).catch(e=>alert(e.message)));
@@ -480,19 +518,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("#rollingGroup button").forEach(c=>c.classList.toggle("active",c===b));
     renderHistory();
   }));
-  if (state.token) {
-    loadFixtures(true).then(()=>{
-      toggleAccess(true);
-      if(new URLSearchParams(location.search).get("tab")==="market"){
-        setTab("market");
-        loadMarkets();
-      }else{
-        location.replace("/classic.html");
-      }
-    }).catch(()=>{
-      state.token="";
-      sessionStorage.removeItem("karubet_access");
-      toggleAccess(false);
-    });
-  }
+  // Mercado público de solo lectura: sin contraseña. La API sigue usando
+  // su clave privada únicamente en el servidor.
+  document.body.classList.add("market-mode");
+  toggleAccess(true);
+  setTab("market");
+  renderMarketSuggestions();
+  loadMarkets();
+  $("marketLeague").addEventListener("change",()=>{renderMarketSuggestions();renderMarkets();});
+  $("marketSearch").addEventListener("input",()=>{renderMarketSuggestions();renderMarkets();});
+  document.addEventListener("error",event=>{
+    if(event.target instanceof HTMLImageElement && event.target.closest(".team-crest,.terminal-hero-crest"))
+      event.target.replaceWith(document.createTextNode("⚽"));
+  },true);
 });
