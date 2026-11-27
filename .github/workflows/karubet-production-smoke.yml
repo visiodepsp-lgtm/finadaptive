@@ -35,6 +35,12 @@ jobs:
                   classic=outputs['/classic.html']
                   index=outputs['/']
                   script=outputs['/classic-app.js']
+                  with urllib.request.urlopen(urllib.request.Request(
+                      root+'/api/data?kind=fixtures&limit=10&days=14',
+                      headers={'User-Agent':'KARUBET-public-healthcheck/3.0'}
+                  ),timeout=20) as res:
+                      api_status=res.status
+                      api_data=__import__('json').loads(res.read().decode('utf-8'))
                   xfo=classic[1].get('X-Frame-Options','')
                   csp=classic[1].get('Content-Security-Policy','')
                   ok=(all(value[0]==200 for value in outputs.values()) and
@@ -42,9 +48,12 @@ jobs:
                       '<iframe' not in index[2] and '<iframe' not in classic[2] and
                       'href="/?tab=market"' in classic[2] and
                       'loadClassicStandalone()' in script[2] and
-                      'KARUBET' in classic[2])
+                      'KARUBET' in classic[2] and
+                      api_status==200 and isinstance(api_data.get('items'),list) and
+                      '<script defer src="/team-crests.js"' in index[2] and
+                      'marketSearch' in index[2])
                   if ok:
-                      print('PUBLICACIÓN CORRECTA: ambas hojas y lectura privada sin iframes.')
+                      print('PUBLICACIÓN CORRECTA: sin contraseña, dos hojas, escudos y filtros de mercado.')
                       break
                   last=f"HTTP={[o[0] for o in outputs.values()]}; XFO={xfo}; independiente={ok}"
               except (urllib.error.URLError,TimeoutError) as err:
