@@ -19,7 +19,7 @@ concurrency:
 jobs:
   collect:
     name: Leer cuotas de 5 ligas
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
