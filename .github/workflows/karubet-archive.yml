@@ -1,0 +1,33 @@
+name: KARUBET - archivar partidos iniciados
+
+on:
+  schedule:
+    - cron: '13 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: karubet-archive
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    name: Guardar series sin borrar snapshots
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - name: Obtener codigo
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verificar sintaxis
+        run: python -m py_compile karubet/archive_completed.py
+      - name: Archivar encuentros finalizados para captura
+        run: python karubet/archive_completed.py
