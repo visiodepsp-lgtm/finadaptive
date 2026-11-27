@@ -11,6 +11,7 @@
   <script defer src="/original-logo.js"></script>
   <script defer src="/team-crests.js"></script>
   <script defer src="/app.js"></script>
+  <script defer src="/capture.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -72,8 +73,9 @@
       <section id="marketPage" class="trading-terminal" role="tabpanel" hidden>
         <div class="terminal-mast">
           <div class="terminal-mast-title"><span class="terminal-mark">K<span>7</span> / MERCADOS</span><strong>MARKET CENTRE</strong><small>MONITOR PREPARTIDO · 1X2 · Apuesta Total</small></div>
-          <div class="terminal-mast-actions"><span class="live-led"><i></i> HISTÓRICO DE CUOTAS</span><button class="ghost" id="refreshMarkets" type="button">↻ SINCRONIZAR</button></div>
+          <div class="terminal-mast-actions"><span class="live-led"><i></i> HISTÓRICO DE CUOTAS</span><button class="ghost capture-action" id="captureNow" type="button" disabled>▶ CAPTURAR CUOTAS AHORA</button><label class="capture-loop-label" for="captureLoop"><input id="captureLoop" type="checkbox" checked><span>REPETIR 10 MIN</span></label><button class="ghost" id="refreshMarkets" type="button">↻ SINCRONIZAR</button></div>
         </div>
+        <div class="terminal-capture-status" role="status" aria-live="polite"><span id="captureStatus">Comprobando disponibilidad del botón de captura…</span><span id="captureNext">Ciclo: solo mientras esta pestaña permanezca abierta.</span></div>
         <div class="terminal-statusbar">
           <span><i class="terminal-pip"></i> <b id="marketMatches">—</b> MERCADOS</span>
           <span>INTERVALO PROGRAMADO <b>10 MIN</b></span>

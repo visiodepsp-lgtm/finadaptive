@@ -68,3 +68,37 @@ un modelo de timing sea validado fuera de muestra.
 - Importante: se trata de una foto histórica, no de un recálculo de
   forma/H2H posterior al 22/11/2026. La actualización semanal de estas
   fichas exige regenerarlas desde el motor original y subir una nueva versión.
+
+## Captura manual y ciclo de 10 minutos (Market Centre)
+
+El botón `CAPTURAR CUOTAS AHORA` no ejecuta Playwright dentro del navegador:
+`POST /api/capture` autoriza una solicitud **en el servidor** y despacha
+`.github/workflows/karubet-1x2.yml` con `save_to_db=true`. GitHub Actions
+ejecuta el recolector y guarda snapshots en Supabase; Market Centre consulta
+automáticamente las novedades cada 25 segundos después de una solicitud.
+El botón `SINCRONIZAR` solo refresca las lecturas, no obtiene cuotas nuevas.
+
+**Configuración necesaria en Vercel, proyecto finadaptive-web (Production):**
+
+1. `GITHUB_ACTIONS_TOKEN`: token GitHub *fine-grained* limitado al repositorio
+   `visiodepsp-lgtm/finadaptive`, permiso **Actions: Read and write**.
+   No debe ponerse en GitHub ni en el HTML.
+2. `KARUBET_CAPTURE_KEY`: frase secreta larga y aleatoria (mínimo 24
+   caracteres), distinta del token GitHub. Se introduce en el prompt del
+   botón; permanece **solo en memoria de la pestaña** hasta cerrarla.
+
+Tras configurar ambas variables, redeployar el proyecto web. Nunca pegar
+ninguna clave en un chat o un commit. El endpoint rechaza llamadas sin la
+frase correcta y limita los disparos cuando hay una ejecución reciente en
+GitHub. La página pública sigue siendo de consulta de datos, pero **el POST
+de captura está protegido**. Si faltan claves, el botón queda deshabilitado.
+
+La casilla `REPETIR 10 MIN` está marcada inicialmente: al pulsar el botón,
+la página solicita una captura y programa nuevos intentos cada diez minutos.
+**El ciclo de navegador termina al cerrar la pestaña** y puede retrasarse si
+el navegador suspende pestañas inactivas. GitHub Actions conserva su cron
+independiente para la recogida de fondo (sus ejecuciones tampoco tienen
+garantía de puntualidad). El servidor evita enviar otra solicitud si detecta
+una ejecución reciente, para no duplicar cuotas. El estado `ENVIADA` no
+implica captura terminada: se confirma solo al observar snapshots más nuevos
+en Supabase.

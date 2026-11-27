@@ -205,3 +205,15 @@ body.market-mode{--bg:#060b11;--panel:#0b141e;--panel2:#0e1a25;--ink:#dce7ed;--m
 .terminal-league-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .terminal-league-chip:hover{background:#1b5039}
 .terminal-league-chip.active{background:#205942;border-color:#70d7a7;color:#e5fff0}
+
+/* Captura explícita de cuotas: la credencial va al servidor, nunca a GitHub desde el navegador */
+.market-mode .terminal-mast-actions{flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.market-mode .capture-action{color:#082516!important;background:#68dca4!important;border:1px solid #68dca4!important;font-weight:900}
+.market-mode .capture-action:disabled{opacity:.52;cursor:not-allowed}
+.capture-loop-label{display:flex;align-items:center;gap:6px;color:#a6e2ec;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer}
+.capture-loop-label input{width:15px;height:15px;min-height:0;margin:0;accent-color:#68dca4}
+.terminal-capture-status{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;border:1px solid #284253;background:#0b1c25;padding:8px 15px;color:#a8c8d6;font-size:11px;line-height:1.55}
+.terminal-capture-status [data-mode="error"]{color:#f4a1a1}
+.terminal-capture-status [data-mode="success"]{color:#81e7ba}
+#captureNext{color:#85a6b1}
+@media(max-width:750px){.market-mode .terminal-mast-actions{justify-content:flex-start}.terminal-capture-status{display:block}.terminal-capture-status span{display:block}.capture-loop-label{font-size:10px}}

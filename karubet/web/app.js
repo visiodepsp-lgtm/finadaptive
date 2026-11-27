@@ -325,6 +325,7 @@ async function loadMarkets() {
       .map(m => Date.parse(m.captured_at)).filter(v => Number.isFinite(v))
       .reduce((a,b) => Math.max(a,b),0);
     const ageMinutes = newest ? Math.floor((Date.now()-newest)/60000) : null;
+    document.dispatchEvent(new CustomEvent("karubet:markets-loaded", {detail:{lastCapturedAt:newest,count:state.markets.length}}));
     const health=$("marketFreshness");
     if(health){
       if(!newest) health.innerHTML="ÚLTIMA CAPTURA <b class='health-stale'>SIN REGISTROS</b>";
