@@ -27,7 +27,7 @@ def ready() -> bool:
 
 def authorized(provided: str) -> bool:
     expected = os.getenv("KARUBET_CAPTURE_KEY", "")
-    return len(expected) >= 24 and hmac.compare_digest(provided, expected)
+    return len(expected) >= 24 and isinstance(provided, str) and hmac.compare_digest(provided.encode("utf-8"), expected.encode("utf-8"))
 
 
 def recent_run_wait(runs: dict, now: datetime | None = None) -> int:
@@ -133,6 +133,12 @@ class handler(BaseHTTPRequestHandler):
         except (urllib.error.URLError, TimeoutError, ValueError, RuntimeError):
             self.send(502, {"error": "GITHUB_SIN_RESPUESTA",
                             "message": "No se pudo confirmar la solicitud en GitHub."})
+            return
+        except Exception as exc:
+            # Diagnóstico sin registrar claves, cabeceras ni información privada.
+            print("KARUBET_CAPTURE_ERROR: " + type(exc).__name__)
+            self.send(502, {"error": "CAPTURA_ERROR_INTERNO",
+                            "message": "Error interno del disparador de GitHub. Revisar Runtime Logs de Vercel."})
             return
         self.send(202, {
             "status": "queued",

@@ -111,7 +111,11 @@
         return;
       }
       if (!response.ok) {
-        status(result.message || "No se pudo enviar la solicitud de captura.", "error");
+        const detail = typeof result.message === "string" ? result.message :
+          typeof result.error === "string" ? result.error :
+          typeof result.error?.message === "string" ? result.error.message : "";
+        status("Error HTTP " + response.status + " · " +
+          (detail || "La función de captura devolvió una respuesta inesperada. Comprueba los logs del proyecto finadaptive-web."), "error");
         if (response.status === 401 || response.status === 503) cancelNext();
         return;
       }

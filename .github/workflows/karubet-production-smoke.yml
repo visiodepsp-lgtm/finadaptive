@@ -75,3 +75,40 @@ jobs:
           else:
               raise SystemExit('Versión pública todavía no validada: '+last)
           PY
+
+      - name: Confirmar endpoint público y bloqueo de POST sin clave
+        env:
+          PUBLIC_URL: https://finadaptive-web.vercel.app
+        run: |
+          python - <<'PY'
+          import json,os,time,urllib.request,urllib.error
+          url=os.environ['PUBLIC_URL'].rstrip('/')+'/api/capture'
+          latest=''
+          for attempt in range(25):
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(url,method='GET'),timeout=15) as response:
+                      data=json.load(response)
+                      ready=data.get('ready')
+                      if response.status!=200 or not ready:
+                          raise RuntimeError('endpoint no configurado')
+                  req=urllib.request.Request(url,method='POST',data=b'',headers={
+                      'Origin':os.environ['PUBLIC_URL'],'User-Agent':'KARUBET-security-smoke'
+                  })
+                  try:
+                      urllib.request.urlopen(req,timeout=15)
+                      raise AssertionError('POST sin clave se acepto: FALLO DE SEGURIDAD')
+                  except urllib.error.HTTPError as error:
+                      body=error.read().decode('utf-8','replace')
+                      if error.code!=401:
+                          latest=f'POST sin clave HTTP {error.code}, body={body[:200]}'
+                          raise RuntimeError(latest)
+                      print('CAPTURA SEGURA: GET activo, POST sin clave bloqueado (HTTP 401).')
+                      break
+              except (urllib.error.URLError,TimeoutError,RuntimeError,ValueError) as error:
+                  latest=type(error).__name__+': '+str(error)[:150]
+                  if attempt in (0,10,20):
+                      print('Verificando endpoint: '+latest)
+                  time.sleep(6)
+          else:
+              raise SystemExit('Endpoint captura sin validar: '+latest)
+          PY

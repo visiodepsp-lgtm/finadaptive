@@ -30,6 +30,14 @@ class CaptureApiTests(unittest.TestCase):
             self.assertFalse(api.authorized(key + "wrong"))
             self.assertFalse(api.authorized(""))
 
+    def test_unicode_access_key_is_supported(self):
+        key = "clave-segura-contraseña-ñ-para-karubet-2026"
+        with patch.dict("os.environ", {"GITHUB_ACTIONS_TOKEN": "example",
+                                            "KARUBET_CAPTURE_KEY": key}):
+            self.assertTrue(api.ready())
+            self.assertTrue(api.authorized(key))
+            self.assertFalse(api.authorized(key + "x"))
+
     def test_recent_run_blocks_duplicate_but_failed_run_does_not(self):
         now = datetime(2026, 11, 27, 18, 0, tzinfo=timezone.utc)
         recent = (now - timedelta(minutes=3)).isoformat()
