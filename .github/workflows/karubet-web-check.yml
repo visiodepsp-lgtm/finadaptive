@@ -27,7 +27,23 @@ jobs:
       - name: Validar JavaScript, HTML y funciones Python
         run: |
           node --check karubet/web/app.js
+          node --check karubet/web/classic-app.js
+          node --check karubet/web/original-logo.js
           python -m py_compile karubet/web/api/data.py
+          python - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          class Check(HTMLParser):
+              def __init__(self): super().__init__(); self.ids=set();self.dupes=[]
+              def handle_starttag(self,tag,attrs):
+                  for key,value in attrs:
+                      if key=='id':
+                          if value in self.ids:self.dupes.append(value)
+                          self.ids.add(value)
+          for html in ('index.html','classic.html'):
+              p=Check();p.feed((Path('karubet/web')/html).read_text());assert not p.dupes,(html,p.dupes)
+          print('HTML validado: IDs únicos en ambas hojas')
+          PY
           python -c "import json; json.load(open('karubet/web/vercel.json',encoding='utf-8')); print('Vercel config OK')"
       - name: Probar API offline sin secretos
         run: python -m unittest discover -s karubet/web/tests -p 'test_*.py' -v
