@@ -1,16 +1,16 @@
 # KARUBET · Captura 1X2 automatizada y observatorio de cuotas
 
-Este módulo es independiente de FinAdaptive. **No modifica** el \`index.html\`
+Este módulo es independiente de FinAdaptive. **No modifica** el `index.html`
 ni el notebook original de KARUBET Match Centre.
 
 ## Programación
 
-GitHub Actions ejecuta \`.github/workflows/karubet-1x2.yml\` a los minutos
+GitHub Actions ejecuta `.github/workflows/karubet-1x2.yml` a los minutos
 **07 y 37 UTC** de cada hora: 48 ejecuciones programadas por día
 (*best effort*: GitHub puede retrasar u omitir ejecuciones).
 - Ejecución programada: guarda snapshots en Supabase.
-- Ejecución manual \`Run workflow\`: por defecto es **solo lectura**.
-- Ejecución manual con \`save_to_db=true\`: guarda en Supabase.
+- Ejecución manual `Run workflow`: por defecto es **solo lectura**.
+- Ejecución manual con `save_to_db=true`: guarda en Supabase.
 - Se puede pausar desde GitHub Actions → workflow → menú ⋯ → Disable workflow.
 
 Se mantienen **cuotas iguales en capturas distintas** para reconstruir series
@@ -19,14 +19,14 @@ de tiempo sin sesgo de selección por cambio de precio.
 ## Protección de datos
 
 Credenciales guardadas como GitHub Repository Secrets:
-- \`SUPABASE_URL\`: URL HTTPS de KARUBET.
-- \`SUPABASE_SECRET_KEY\`: clave privada \`sb_secret_...\`, nunca en frontend.
+- `SUPABASE_URL`: URL HTTPS de KARUBET.
+- `SUPABASE_SECRET_KEY`: clave privada `sb_secret_...`, nunca en frontend.
 
 Datos en PostgreSQL:
-- \`public.karubet_ingest_runs\`: auditoría y diagnósticos por ejecución.
-- \`public.karubet_odds_1x2\`: snapshot de cada partido prepartido
+- `public.karubet_ingest_runs`: auditoría y diagnósticos por ejecución.
+- `public.karubet_odds_1x2`: snapshot de cada partido prepartido
   (competición, fecha de juego, captura, cuota L/E/V, probabilidades de mercado).
-- \`karubet_analytics.ultimos_movimientos_1x2\`: vista privada que calcula
+- `karubet_analytics.ultimos_movimientos_1x2`: vista privada que calcula
   diferencia con última captura, cambio de probabilidad en puntos porcentuales,
   media y z-score en una ventana de 12 observaciones.
 
@@ -35,7 +35,7 @@ se guardan en la base. Los datos dudosos se conservan en diagnósticos locales
 sin contaminar el historial. No se fabrican cuotas, fechas o equipos.
 Se evita relacionar partidos que aparecen en varias categorías.
 
-El proceso genera \`alertas_movimientos.json\` y un resumen en GitHub Actions
+El proceso genera `alertas_movimientos.json` y un resumen en GitHub Actions
 cuando encuentra una variación de cuota ≥3% o un movimiento de probabilidad
 implícita ≥1 punto porcentual. Son **alertas descriptivas**, no apuestas.
 
