@@ -35,12 +35,12 @@ Tras crear/actualizar variables, hacer un redeploy.
 ## Datos actuales
 - Hoja 1: 1.204 predicciones originales 6.3 en Supabase (al 27/11/2026).
 - Hoja 2: 78 snapshots en 39 partidos, dos capturas verificadas
-  al 27/11/2026, sujeto a actualización por cron cada 15 min.
-  Las ejecuciones programadas de GitHub pueden demorarse u omitirse.
+  al 27/11/2026, sujeto a actualización por cron programado cada 10 min.
+  Las ejecuciones programadas de GitHub pueden demorarse u omitirse.\n  La barra de Market Centre muestra la hora de la última captura y alerta\n  si han pasado más de 25 minutos sin snapshots nuevos.
 - Market Centre: watchlist densa con filtros de liga y autocompletado
   de equipos, gráfico con cursor, MA rolling, banda, estadísticas y tape.
 - Escudos de 96 clubes 2026/27 procedentes del proyecto público
-  luukhopman/football-logos. Las marcas son de sus respectivos clubes;
+  luukhopman/football-logos. Los logos de las cinco ligas provienen de\n  Sachawd/wc26-assets. Las marcas son de sus respectivos titulares;
   se muestra fallback textual cuando no existe correspondencia revisada.
 - Para vincular Hoja 1 y Hoja 2 se utiliza la tabla
   karubet_fixture_odds_links, sólo con enlaces revisados.
