@@ -43,11 +43,12 @@ def get_json(table: str, params: dict) -> list:
 def fixtures(query: dict) -> dict:
     now = datetime.now(timezone.utc)
     days = max(1, min(int(query.get("days", ["90"])[0]), 210))
-    limit = max(10, min(int(query.get("limit", ["300"])[0]), 650))
+    limit = max(10, min(int(query.get("limit", ["250"])[0]), 350))
+    offset = max(0, min(int(query.get("offset", ["0"])[0]), 2000))
     future = get_json("karubet_fixtures_2026", {
         "select": "fixture_id,competition,home_team,away_team,kickoff_at,status,phase",
         "kickoff_at": "gte." + now.isoformat(timespec="seconds"),
-        "order": "kickoff_at.asc", "limit": str(limit),
+        "order": "kickoff_at.asc", "limit": str(limit), "offset": str(offset),
     })
     before = now + timedelta(days=days)
     future = [row for row in future if parse_time(row.get("kickoff_at")) <= before]
@@ -65,7 +66,8 @@ def fixtures(query: dict) -> dict:
     for row in future:
         row["model"] = predictions.get(int(row["fixture_id"]))
     return {"items": future, "count": len(future), "model_count": sum(bool(r["model"]) for r in future),
-            "asof": now.isoformat(timespec="seconds"), "days": days}
+            "asof": now.isoformat(timespec="seconds"), "days": days,
+            "offset": offset, "page_full": len(future) == limit}
 
 
 def parse_time(value: str | None) -> datetime:
