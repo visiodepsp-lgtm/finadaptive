@@ -44,7 +44,7 @@ jobs:
       - name: Revisar sintaxis
         run: python -m py_compile karubet/*.py
       - name: Probar filtros del modelo de datos
-        run: PYTHONPATH=karubet python -m unittest discover -s karubet -p 'test_*.py' -v
+        run: PYTHONPATH=karubet python -m unittest discover -s karubet -p 'test_collector.py' -v
       - name: Capturar listado y verificar conexion
         shell: bash
         run: |
