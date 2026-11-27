@@ -7,11 +7,12 @@
   <meta name="description" content="KARUBET 7.0: probabilidades originales de fútbol y monitor de cuotas con rolling y tendencias.">
   <title>KARUBET 7.0 · Probabilidades + Market Centre</title>
   <link rel="stylesheet" href="/styles.css">
+  <script defer src="/original-logo.js"></script>
   <script defer src="/app.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><div class="logo">K<span>7</span></div><div><strong>KARUBET <span class="brand-v">7.0</span></strong><small>Football Intelligence & Market Timing</small></div></div>
+    <div class="brand"><img class="brand-logo-original" data-karubet-logo="original" alt="Logo original KARUBET: perro y gato" src="" width="58" height="58"><div><strong>KARUBET <span class="brand-v">7.0</span></strong><small>Football Intelligence & Market Timing</small></div></div>
     <div class="topright"><span class="pill" id="databaseState"><span class="dot"></span> Conectando</span><button class="ghost small" id="logout" type="button" hidden>Salir</button></div>
   </header>
   <main>
@@ -34,6 +35,16 @@
       </div>
 
       <section id="probPage" role="tabpanel">
+        <div class="classic-toolbar">
+          <div><p class="eyebrow">01 · PROBABILIDADES</p>
+            <strong>Match Centre 6.3 · Plantilla original</strong>
+            <p class="smallmuted" id="classicCount">Sincronizando fixtures y probabilidades desde Supabase...</p></div>
+          <button class="ghost" id="classicReload" type="button">↻ Actualizar probabilidades</button>
+        </div>
+        <iframe id="classicFrame" class="classic-frame" src="/classic.html"
+          title="KARUBET Match Centre 6.3 · Plantilla original con probabilidades de Supabase"
+          scrolling="no" loading="eager" referrerpolicy="same-origin"></iframe>
+        <div id="probLegacy" hidden>
         <div class="kpis">
           <div class="kpi"><span>FIXTURES EN CONSULTA</span><strong id="kpiMatches">—</strong><small>Temporada 2026/27</small></div>
           <div class="kpi"><span>CON PROBABILIDADES</span><strong id="kpiPredicted">—</strong><small>PA / Quasi / Doble / Remontada</small></div>
@@ -50,6 +61,7 @@
         <div class="two-col">
           <div class="panel listpanel"><div class="panelhead"><strong>Próximos partidos</strong><small id="fixtureCount">Cargando...</small></div><div class="matchlist" id="matchList"><div class="empty">Consulta de fixtures pendiente.</div></div><button id="loadMore" class="ghost loadmore" hidden>Cargar más partidos</button></div>
           <div class="panel detailpanel" id="matchDetail"><div class="empty tall"><div class="empty-icon">⚽</div>Selecciona un partido para ver sus probabilidades originales.</div></div>
+        </div>
         </div>
       </section>
 
