@@ -1,56 +1,64 @@
-# KARUBET · Captura 1X2 (versión piloto)
+# KARUBET · Captura 1X2 automatizada y observatorio de cuotas
 
-Este módulo está separado de FinAdaptive. **No modifica** el \`index.html\` ni el notebook original.
-Captura las columnas de apuestas **Local / Empate / Visita** de los cinco enlaces de
-Apuesta Total configurados en \`catalogo.py\`, sin abrir cada evento.
+Este módulo es independiente de FinAdaptive. **No modifica** el \`index.html\`
+ni el notebook original de KARUBET Match Centre.
 
-## Primera prueba segura
+## Programación
 
-1. Revisa y fusiona el PR \`karubet-automation-v1\` a \`main\`.
-2. En **Actions**, abre **KARUBET - prueba cuotas 1X2**.
-3. Pulsa **Run workflow** y **deja desmarcado** \`save_to_db\` (por defecto).
-4. En la ejecución, baja el artifact \`karubet-diagnostico-1x2\`.
-5. Verifica los datos en \`cuotas_1x2.csv\`, \`diagnosticos.json\`, \`resumen.json\`
-   y las capturas \`liga_XX.png\`.
-6. Cuando comprobemos que la lectura corresponde a cada categoría, ejecuta
-   de nuevo y activa \`save_to_db\` para insertar snapshots en Supabase.
+GitHub Actions ejecuta \`.github/workflows/karubet-1x2.yml\` a los minutos
+**07 y 37 UTC** de cada hora: 48 ejecuciones programadas por día
+(*best effort*: GitHub puede retrasar u omitir ejecuciones).
+- Ejecución programada: guarda snapshots en Supabase.
+- Ejecución manual \`Run workflow\`: por defecto es **solo lectura**.
+- Ejecución manual con \`save_to_db=true\`: guarda en Supabase.
+- Se puede pausar desde GitHub Actions → workflow → menú ⋯ → Disable workflow.
 
-**Todavía no hay ejecución automática por horario**. La agregaremos tras validar
-la primera captura desde los runners de GitHub.
+Se mantienen **cuotas iguales en capturas distintas** para reconstruir series
+de tiempo sin sesgo de selección por cambio de precio.
 
-## Seguridad
+## Protección de datos
 
-Los dos secrets del repositorio son:
-- \`SUPABASE_URL\`: URL HTTPS de Supabase.
-- \`SUPABASE_SECRET_KEY\`: clave privada \`sb_secret_...\`, **nunca** se imprime ni se sube.
+Credenciales guardadas como GitHub Repository Secrets:
+- \`SUPABASE_URL\`: URL HTTPS de KARUBET.
+- \`SUPABASE_SECRET_KEY\`: clave privada \`sb_secret_...\`, nunca en frontend.
 
-El recolector usa la API REST con el header \`apikey\` (no JWT Bearer).
-No agregues estas claves a archivos, imágenes, ni al frontend público.
-
-La base ya tiene las tablas:
+Datos en PostgreSQL:
 - \`public.karubet_ingest_runs\`: auditoría y diagnósticos por ejecución.
-- \`public.karubet_odds_1x2\`: historial por partido/captura.
+- \`public.karubet_odds_1x2\`: snapshot de cada partido prepartido
+  (competición, fecha de juego, captura, cuota L/E/V, probabilidades de mercado).
+- \`karubet_analytics.ultimos_movimientos_1x2\`: vista privada que calcula
+  diferencia con última captura, cambio de probabilidad en puntos porcentuales,
+  media y z-score en una ventana de 12 observaciones.
 
-Ambas usan RLS y no conceden lectura pública. Solo un backend autorizado
-puede insertar datos mediante la Secret API key.
+Solo los partidos con fecha, liga y cuotas verificadas, **antes del inicio**,
+se guardan en la base. Los datos dudosos se conservan en diagnósticos locales
+sin contaminar el historial. No se fabrican cuotas, fechas o equipos.
+Se evita relacionar partidos que aparecen en varias categorías.
 
-## Calidad de datos
+El proceso genera \`alertas_movimientos.json\` y un resumen en GitHub Actions
+cuando encuentra una variación de cuota ≥3% o un movimiento de probabilidad
+implícita ≥1 punto porcentual. Son **alertas descriptivas**, no apuestas.
 
-- Se exige validar que la **cuota central sea EMPATE**, y el margen implícito
-  del mercado debe tener un rango plausible.
-- Los mismos encuentros detectados en varias categorías se excluyen.
-- Si no se encuentra fecha, se guarda como NULL y se marca \`kickoff_missing\`.
-  **No se debe cruzar directamente con el fixture hasta confirmar la fecha.**
-- Si las cinco ligas devuelven exactamente la misma cantidad, se marca una alerta.
-- Si el sitio cambia o restringe los navegadores automáticos, puede fallar:
-  HTTP 200 no confirma que la extracción sea correcta.
+## Acceder a los resultados
 
-**No son probabilidades del modelo**: \`market_p_*\` son probabilidades implícitas
-normalizadas, calculadas únicamente a partir de las cuotas.
+- **Actions → KARUBET - cuotas 1X2 cada 30 min → Run → Summary**.
+- Los artifacts de diagnósticos se suben en ejecuciones manuales o fallidas.
+- Los registros completos permanecen en la BD de Supabase hasta que
+  se aplique una política de retención/archivo.
 
-El histórico H2H, las estadísticas oficiales, el modelo Poisson y el
-Match Centre 6.3 siguen separados: integración posterior, tras validar fechas
-y ligas. No se envían apuestas ni se automatizan transacciones.
+## Investigación y siguientes etapas
 
-Respetar las condiciones de uso y límites de la fuente de datos. No intentar
-eludir restricciones o CAPTCHAs.
+- Hipótesis iniciales: momentum, reversión a la media, cambios bruscos,
+  cierre de cuota y discrepancia de cuota respecto al modelo KARUBET.
+- No considerar la cuota de una sola casa como un activo que se pueda
+  comprar y vender sin costes. En un bookmaker la apuesta suele ser
+  fija; el valor de cash-out o la cobertura depende de condiciones.
+- Validar señales por partido y *walk-forward* con resultados realizados;
+  separar ligas, controlar comisiones/margen, no introducir información futura.
+- Una disminución de cuota ≠ prueba de ventaja predictiva.
+- GitHub Actions puede consumir minutos y Supabase almacenamiento según
+  su plan. Revisar consumo periódicamente.
+- Nunca se envían apuestas ni se automatizan pagos.
+
+Uso sujeto a los términos del proveedor de cuotas; si bloquea automatización,
+el recolector falla sin intentar eludir restricciones.
