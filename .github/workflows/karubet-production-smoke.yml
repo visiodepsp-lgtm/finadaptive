@@ -16,31 +16,40 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Confirmar que Vercel permite el Match Centre sólo dentro de KARUBET
+      - name: Confirmar dos páginas independientes en Vercel sin iframe
         env:
-          PUBLIC_URL: https://finadaptive-web.vercel.app/classic.html
+          PUBLIC_URL: https://finadaptive-web.vercel.app
         run: |
           python - <<'PY'
           import os,time,urllib.request,urllib.error
-          url=os.environ['PUBLIC_URL']
-          last=""
-          for attempt in range(18):
+          root=os.environ['PUBLIC_URL'].rstrip('/')
+          last=''
+          for attempt in range(24):
               try:
-                  request=urllib.request.Request(url,headers={'User-Agent':'KARUBET-public-healthcheck/1.0'})
-                  with urllib.request.urlopen(request,timeout=12) as res:
-                      status=res.status
-                      h=res.headers
-                      xfo=h.get('X-Frame-Options','')
-                      csp=h.get('Content-Security-Policy','')
-                      body=res.read(2048).decode('utf-8','replace')
-                      last=f"HTTP {status}, XFO {xfo}, CSP frame-ancestors-self={chr(39)+'self'+chr(39) in csp}"
-                      if (status==200 and xfo.upper()=='SAMEORIGIN' and
-                          "frame-ancestors 'self'" in csp and 'KARUBET' in body):
-                          print('PUBLICACIÓN CORRECTA: classic.html HTTP 200, marco SAMEORIGIN y CSP self.')
-                          break
+                  outputs={}
+                  for path in ('/','/classic.html','/classic-app.js'):
+                      with urllib.request.urlopen(urllib.request.Request(
+                          root+path,headers={'User-Agent':'KARUBET-public-healthcheck/2.0'}
+                      ),timeout=12) as res:
+                          outputs[path]=(res.status,res.headers,res.read().decode('utf-8','replace'))
+                  classic=outputs['/classic.html']
+                  index=outputs['/']
+                  script=outputs['/classic-app.js']
+                  xfo=classic[1].get('X-Frame-Options','')
+                  csp=classic[1].get('Content-Security-Policy','')
+                  ok=(all(value[0]==200 for value in outputs.values()) and
+                      xfo.upper()=='DENY' and "frame-ancestors 'none'" in csp and
+                      '<iframe' not in index[2] and '<iframe' not in classic[2] and
+                      'href="/?tab=market"' in classic[2] and
+                      'loadClassicStandalone()' in script[2] and
+                      'KARUBET' in classic[2])
+                  if ok:
+                      print('PUBLICACIÓN CORRECTA: ambas hojas y lectura privada sin iframes.')
+                      break
+                  last=f"HTTP={[o[0] for o in outputs.values()]}; XFO={xfo}; independiente={ok}"
               except (urllib.error.URLError,TimeoutError) as err:
                   last=type(err).__name__
-              time.sleep(8)
+              time.sleep(6)
           else:
-              raise SystemExit('Publicación no validada: '+last+'. Revisar el proyecto Vercel y deploy actual.')
+              raise SystemExit('Versión pública todavía no validada: '+last)
           PY
