@@ -1,6 +1,10 @@
-name: KARUBET - prueba cuotas 1X2
+name: KARUBET - cuotas 1X2 cada 30 min
 
 on:
+  # Cada 30 minutos, en UTC. Minutos desplazados del inicio de hora
+  # para reducir demoras en los runners compartidos de GitHub.
+  schedule:
+    - cron: '7,37 * * * *'
   workflow_dispatch:
     inputs:
       save_to_db:
@@ -24,7 +28,8 @@ jobs:
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      PERSIST: ${{ inputs.save_to_db }}
+      # Las ejecuciones programadas guardan datos; las manuales son dry-run por defecto.
+      PERSIST: ${{ github.event_name == 'schedule' || inputs.save_to_db }}
     steps:
       - name: Obtener codigo
         uses: actions/checkout@v4
@@ -49,10 +54,10 @@ jobs:
             python karubet/collector.py --out karubet/output
           fi
       - name: Descargar diagnosticos y cuotas como artifact
-        if: always()
+        if: ${{ always() && (github.event_name == 'workflow_dispatch' || failure()) }}
         uses: actions/upload-artifact@v4
         with:
           name: karubet-diagnostico-1x2
           path: karubet/output/
-          retention-days: 7
+          retention-days: 3
           if-no-files-found: warn
