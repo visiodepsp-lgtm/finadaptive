@@ -195,3 +195,13 @@ body.market-mode{--bg:#060b11;--panel:#0b141e;--panel2:#0e1a25;--ink:#dce7ed;--m
   ::view-transition-old(karubet-logo),::view-transition-new(karubet-logo){animation:none}
 }
 @media(max-width:670px){.market-mode .terminal-topnav a{padding:8px 7px;font-size:10px}}
+
+/* Selector compacto por liga: activos reales y sin tarjetas grandes */
+.terminal-league-chips{display:flex;flex-wrap:wrap;gap:4px;padding:0 0 12px}
+.terminal-league-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid #335d49;
+  background:#102f24;color:#b9d8c8;padding:5px 7px;border-radius:4px;
+  max-width:110px;font-size:10px;font-weight:650;transition:background .15s ease,border .15s ease}
+.terminal-league-chip img{height:17px;width:17px;object-fit:contain;background:#f4f7f5;border-radius:3px;padding:2px}
+.terminal-league-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.terminal-league-chip:hover{background:#1b5039}
+.terminal-league-chip.active{background:#205942;border-color:#70d7a7;color:#e5fff0}
