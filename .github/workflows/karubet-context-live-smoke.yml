@@ -1,0 +1,59 @@
+name: KARUBET - validar H2H historico en produccion
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/karubet-context-live-smoke.yml'
+      - 'karubet/web/classic-app.js'
+      - 'karubet/web/api/data.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-history:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Comprobar forma, factores y H2H reales servidos por Vercel
+        run: |
+          python - <<'PY'
+          import json,time,urllib.error,urllib.request
+          root="https://finadaptive-web.vercel.app"
+          last="Sin intento"
+          for attempt in range(20):
+              try:
+                  request=urllib.request.Request(
+                      root+"/api/data?kind=contexts&ids=19722093",
+                      headers={"User-Agent":"KARUBET-context-healthcheck/1.0"})
+                  with urllib.request.urlopen(request,timeout=12) as res:
+                      response=json.load(res)
+                  with urllib.request.urlopen(
+                      root+"/classic-app.js",timeout=12) as res:
+                      script=res.read().decode("utf-8","replace")
+                  items=response.get("items",[])
+                  if items:
+                      record=items[0]
+                      data=record.get("context",{})
+                      has=(record.get("fixture_id")==19722093 and
+                           data.get("home")=="Arsenal" and
+                           data.get("away")=="Manchester City" and
+                           len(data.get("home_recent",[]))==5 and
+                           len(data.get("away_recent",[]))==5 and
+                           len(data.get("h2h_matches",[]))==12 and
+                           isinstance(data.get("h_gf_5"),(int,float)) and
+                           record.get("source_snapshot_date")=="2026-11-22" and
+                           "loadOriginalContexts(rows,status)" in script)
+                      if has:
+                          print("PUBLICADO: Arsenal-Man City, 5+5 resultados, 12 H2H y factores del archivo original.")
+                          break
+                  last="Aun no esta la version nueva o faltan contextos originales"
+              except (urllib.error.URLError,TimeoutError,ValueError) as err:
+                  last=type(err).__name__+": "+str(err)[:160]
+              time.sleep(6)
+          else:
+              raise SystemExit("ERROR: "+last+"; comprueba el desplegado actual de Vercel.")
+          PY
