@@ -46,5 +46,23 @@ jobs:
           print('HTML validado: IDs únicos en ambas hojas')
           PY
           python -c "import json; json.load(open('karubet/web/vercel.json',encoding='utf-8')); print('Vercel config OK')"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          config=json.loads(Path('karubet/web/vercel.json').read_text())
+          rules=[r for r in config['headers'] if r['source']=='/(.*)']
+          assert len(rules)==1, 'No hay cabeceras seguras en Vercel'
+          headers={h['key'].lower():h['value'] for h in rules[0]['headers']}
+          assert headers['x-frame-options'].upper()=='SAMEORIGIN'
+          assert "frame-ancestors 'self'" in headers['content-security-policy']
+          assert "frame-src 'self'" in headers['content-security-policy']
+          assert "frame-ancestors 'none'" not in headers['content-security-policy']
+          assert "script-src 'self'" in headers['content-security-policy']
+          html=Path('karubet/web/index.html').read_text()
+          classic=Path('karubet/web/classic.html').read_text()
+          assert 'id="classicFrame"' in html and 'src="/classic.html"' in html
+          assert 'data-karubet-logo="original"' in classic
+          print('Iframe original permitido exclusivamente mismo origen: OK')
+          PY
       - name: Probar API offline sin secretos
         run: python -m unittest discover -s karubet/web/tests -p 'test_*.py' -v
