@@ -60,6 +60,83 @@ async function request(kind, args={}) {
   }
   return body;
 }
+
+/* Hoja 1: plantilla original 6.3, alimentada SOLO con resultados existentes
+   de Supabase. No se envían credenciales ni se reconstruyen H2H ausentes. */
+function peruDateParts(raw) {
+  const d = new Date(raw);
+  if (!Number.isFinite(d.getTime())) return {date:"", hour:""};
+  const parts = new Intl.DateTimeFormat("en-GB",{
+    timeZone:"America/Lima",year:"numeric",month:"2-digit",day:"2-digit",
+    hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+  }).formatToParts(d);
+  const x = Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  return {date:x.year+"-"+x.month+"-"+x.day, hour:x.hour+":"+x.minute};
+}
+function classicPayload() {
+  const now=peruDateParts(new Date().toISOString());
+  const rows=state.fixtures.filter(f=>f.model && f.kickoff_at).map(f=>{
+    const p=f.model.probabilities||{},m=f.model.metrics||{};
+    const dt=peruDateParts(f.kickoff_at);
+    const out={
+      fixture_id:f.fixture_id,competition:f.competition,
+      home:f.home_team,away:f.away_team,dia:dt.date,hora:dt.hour,
+      hora_confirmada:dt.hour!=="",
+      lambda_h:m.lambda_home??null,lambda_a:m.lambda_away??null,
+      h2h_count:m.h2h_count??0,h2h_evidence:m.h2h_evidence??null,
+      home_recent:[],away_recent:[],h2h_matches:[],
+      original_pa:p.original_pa??p.pa??null,
+      original_qpa:p.original_qpa??p.qpa??null,
+      original_dpa:p.original_dpa??p.dpa??null,
+      original_rem:p.original_rem??p.rem??null
+    };
+    for(const mode of ["ewma","h2h"]){
+      for(const event of ["pa","qpa","dpa","rem"]){
+        out[mode+"_"+event]=p[mode]?.[event]??null;
+      }
+    }
+    return out;
+  });
+  const latest=state.lastModelDate;
+  return {rows, logos:{}, league_logos:{},
+    meta:{today:now.date,
+      asof:latest?when(latest):"sin actualización",
+      source_date:"Supabase · KARUBET 6.3",
+      fresh:!!latest}};
+}
+function sendClassicData(){
+  const frame=$("classicFrame");
+  if(!frame?.contentWindow || !state.token || !state.fixtureDone) return;
+  const payload=classicPayload();
+  frame.contentWindow.postMessage({type:"KARUBET_CLASSIC_DATA",payload},location.origin);
+  $("classicCount").textContent=payload.rows.length+
+    " partidos con predicción PA · Actualización: "+(state.lastModelDate?when(state.lastModelDate):"pendiente")+
+    " · Datos de forma y cronologías detalladas: pendiente de importar";
+}
+async function loadAllClassic(){
+  // Traer todas las páginas futuras, no dejar el panel limitado a 250.
+  while(!state.fixtureDone) await loadFixtures(false);
+  sendClassicData();
+}
+function resetClassicFrame(){
+  const frame=$("classicFrame");
+  frame.src="/classic.html?version="+encodeURIComponent(String(Date.now()));
+}
+window.addEventListener("message",event=>{
+  const frame=$("classicFrame");
+  if(event.origin!==location.origin || event.source!==frame?.contentWindow || !event.data) return;
+  if(event.data.type==="KARUBET_CLASSIC_READY"){sendClassicData();}
+  else if(event.data.type==="KARUBET_CLASSIC_HEIGHT"){
+    const height=Number(event.data.height);
+    if(Number.isFinite(height)&&height>=300&&height<=80000)
+      frame.style.height=Math.ceil(height+12)+"px";
+  }else if(event.data.type==="KARUBET_CLASSIC_SELECT"){
+    const id=Number(event.data.fixture_id);
+    const match=state.fixtures.find(f=>Number(f.fixture_id)===id);
+    if(match){state.selectedFixture=match;renderFixtures();}
+  }
+});
+
 function toggleAccess(yes) {
   $("workspace").hidden = !yes;
   $("loginPanel").hidden = yes;
@@ -79,6 +156,7 @@ async function login() {
     sessionStorage.setItem("karubet_access", state.token);
     toggleAccess(true);
     loadMarkets();
+    loadAllClassic().catch(e=>{ $("classicCount").textContent="Error cargando todo el fixture: "+e.message; });
   } catch (e) {
     $("loginFeedback").textContent = e.message || "No se pudo conectar.";
     setStatus("Sin conexión", false);
@@ -356,6 +434,14 @@ function renderHistory() {
 document.addEventListener("DOMContentLoaded", () => {
   $("loginForm").addEventListener("submit", event=>{event.preventDefault();login();});
   $("logout").addEventListener("click",logout);
+  document.querySelectorAll('img[data-karubet-logo]').forEach(img=>{
+    if(window.KARUBET_ORIGINAL_LOGO) img.src=window.KARUBET_ORIGINAL_LOGO;
+  });
+  $("classicReload").addEventListener("click",()=>{
+    $("classicCount").textContent="Actualizando probabilidades originales...";
+    loadFixtures(true).then(()=>loadAllClassic()).then(()=>resetClassicFrame())
+      .catch(e=>{ $("classicCount").textContent="No se pudo actualizar: "+e.message; });
+  });
   $("tabProbs").addEventListener("click",()=>setTab("probs"));
   $("tabMarket").addEventListener("click",()=>setTab("market"));
   $("refreshFixtures").addEventListener("click",()=>loadFixtures(true).catch(e=>{setStatus("Error de lectura",false);alert(e.message);}));
@@ -378,6 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadFixtures(true).then(()=>{
       toggleAccess(true);
       loadMarkets();
+      loadAllClassic().catch(e=>{ $("classicCount").textContent="Error cargando todo el fixture: "+e.message; });
     }).catch(()=>{
       state.token="";
       sessionStorage.removeItem("karubet_access");
