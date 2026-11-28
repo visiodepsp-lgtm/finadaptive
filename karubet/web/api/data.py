@@ -119,11 +119,16 @@ def markets() -> dict:
     rows = get_json("karubet_odds_1x2", {
         "select": "id,league_code,home_team,away_team,kickoff_at,source_url,captured_at,"
                   "odd_home,odd_draw,odd_away,market_p_home,market_p_draw,market_p_away,quality_flags",
+        "kickoff_at": "gt." + now.isoformat(timespec="seconds"),
         "captured_at": "gte." + since, "order": "captured_at.desc", "limit": "1000",
     })
     latest = {}
     for row in rows:
-        key = (row["league_code"], row["home_team"], row["away_team"], row["kickoff_at"])
+        kickoff = row.get("kickoff_at")
+        # No borrar el histórico: este filtro solo afecta la Watchlist prematch.
+        if not kickoff or parse_time(kickoff) <= now:
+            continue
+        key = (row["league_code"], row["home_team"], row["away_team"], kickoff)
         latest.setdefault(key, row)
     records = sorted(latest.values(), key=lambda row: row["kickoff_at"] or "9999")
     return {"items": records, "count": len(records), "asof": now.isoformat(timespec="seconds"),

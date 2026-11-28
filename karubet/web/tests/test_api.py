@@ -44,6 +44,30 @@ class ReadOnlyApiTests(unittest.TestCase):
         self.assertEqual(data["count"], 1)
         self.assertEqual(data["items"][0]["odd_home"], 2.7)
 
+    def test_prepartido_excludes_started_and_null_kickoff(self):
+        now=datetime.now(timezone.utc)
+        soon=(now+timedelta(hours=2)).isoformat()
+        already=(now-timedelta(minutes=2)).isoformat()
+        base={"id":1,"league_code":"110","home_team":"Hamburgo",
+              "away_team":"Bayern München","captured_at":now.isoformat(),
+              "odd_home":8.6,"odd_draw":6.3,"odd_away":1.27}
+        rows=[dict(base,id=2,kickoff_at=already),
+              dict(base,id=3,kickoff_at=None),
+              dict(base,id=4,kickoff_at=soon)]
+        with patch.object(api,"get_json",return_value=rows) as query:
+            output=api.markets()
+        self.assertEqual(output["count"],1)
+        self.assertEqual(output["items"][0]["id"],4)
+        self.assertTrue(query.call_args.args[1]["kickoff_at"].startswith("gt."))
+        self.assertEqual(len(rows),3)
+
+    def test_historical_snapshots_remain_available(self):
+        row={"captured_at":"2026-11-27T18:00:00+00:00","odd_home":2.5}
+        with patch.object(api,"get_json",return_value=[row]):
+            data=api.history({"league":["110"],"home":["Werder Bremen"],
+                              "away":["Borussia Monchengladbach"]})
+        self.assertEqual(data["count"],1)
+
     def test_history_rejects_unscoped_request(self):
         with self.assertRaises(ValueError):
             api.history({"home":["A"],"away":["B"]})

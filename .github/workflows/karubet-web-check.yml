@@ -24,6 +24,7 @@ jobs:
       - name: Validar JavaScript, HTML y funciones Python
         run: |
           node --check karubet/web/app.js
+          node karubet/web/tests/test_market_rules.mjs
           node --check karubet/web/classic-app.js
           node --check karubet/web/team-crests.js
           node --check karubet/web/original-logo.js

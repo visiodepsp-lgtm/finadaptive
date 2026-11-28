@@ -217,3 +217,14 @@ body.market-mode{--bg:#060b11;--panel:#0b141e;--panel2:#0e1a25;--ink:#dce7ed;--m
 .terminal-capture-status [data-mode="success"]{color:#81e7ba}
 #captureNext{color:#85a6b1}
 @media(max-width:750px){.market-mode .terminal-mast-actions{justify-content:flex-start}.terminal-capture-status{display:block}.terminal-capture-status span{display:block}.capture-loop-label{font-size:10px}}
+
+/* Chips: logo remoto y emblema legible BL si no carga. */
+.market-mode .terminal-league-chip{max-width:145px}
+.market-mode .terminal-league-chip.empty-league{opacity:.68}
+.market-mode .terminal-league-chip .league-chip-icon{position:relative;display:inline-flex;
+  align-items:center;justify-content:center;flex:0 0 19px;width:19px;height:19px;
+  overflow:hidden;border-radius:4px;background:#c9142f;color:#fff;font-size:10px;font-weight:950}
+.market-mode .terminal-league-chip .league-chip-icon-fallback{color:#fff;font-size:10px;line-height:1}
+.market-mode .terminal-league-chip .league-chip-icon img{position:absolute;inset:0;display:block;
+  width:19px;height:19px;padding:2px;object-fit:contain;background:#f4f7f5;border-radius:3px}
+.market-mode .terminal-league-chip>span:last-child{min-width:0}

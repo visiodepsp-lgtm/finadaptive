@@ -16,6 +16,16 @@ const LEAGUES = {
   "38": "La Liga", "110": "Bundesliga", "125": "Champions League"
 };
 
+const MARKET_LEAGUES=[
+  {id:"24",name:"Premier League"}, {id:"38",name:"La Liga"},
+  {id:"74",name:"Serie A"}, {id:"110",name:"Bundesliga"},
+  {id:"25",name:"Ligue 1"}, {id:"125",name:"Champions League"}
+];
+// Mercado PREMATCH: no exhibir cuotas de partidos ya iniciados.
+function isUpcomingMarket(m, nowMs=Date.now()){
+  const kickoff=Date.parse(m?.kickoff_at||"");
+  return Number.isFinite(kickoff)&&kickoff>nowMs;
+}
 function escapeHTML(x) {
   return String(x ?? "").replace(/[&<>"']/g, c => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -317,7 +327,7 @@ async function loadMarkets() {
   try {
     const data = await request("markets");
     const before = state.selectedMarket;
-    state.markets = data.items || [];
+    state.markets = (data.items || []).filter(m=>isUpcomingMarket(m));
     renderMarketLeagueChips();
     renderMarketSuggestions();
     $("marketMatches").textContent = state.markets.length;
@@ -344,7 +354,7 @@ async function loadMarkets() {
       m.league_code===before.league_code && m.home_team===before.home_team &&
       m.away_team===before.away_team && m.kickoff_at===before.kickoff_at);
     if (match || state.markets.length) selectMarket(match || state.markets[0]);
-    else {state.selectedMarket=null; renderMarkets();}
+    else {state.selectedMarket=null;state.history=[];clearMarketDetails();renderMarkets();}
   } catch (e) {
     $("marketCount").textContent = "No disponible";
     $("marketList").innerHTML = '<div class="empty">' + escapeHTML(e.message) + '</div>';
@@ -357,7 +367,7 @@ function normalizeClub(value) {
 function marketFiltered(){
   const league=$("marketLeague").value;
   const query=normalizeClub($("marketSearch").value);
-  return state.markets.filter(m=>(!league||String(m.league_code)===league)&&
+  return state.markets.filter(m=>isUpcomingMarket(m)&&(!league||String(m.league_code)===league)&&
     (!query||normalizeClub(m.home_team+" "+m.away_team).includes(query)));
 }
 function teamCrestHtml(name,league,cls="team-crest"){
@@ -370,20 +380,26 @@ function renderMarketLeagueChips(){
   const target=$("marketLeaguePills");
   if(!target) return;
   target.replaceChildren();
-  const leagues=[{id:"",name:"Todas"}, ...[...new Set(state.markets.map(m=>String(m.league_code)))]
-    .sort((a,b)=>(LEAGUES[a]||a).localeCompare(LEAGUES[b]||b,"es"))
-    .map(id=>({id,name:LEAGUES[id]||id}))];
+  const leagues=[{id:"",name:"Todas"}, ...MARKET_LEAGUES];
+  const active=state.markets.filter(m=>isUpcomingMarket(m));
   for(const league of leagues){
     const button=document.createElement("button");
     button.type="button";
     button.className="terminal-league-chip"+($("marketLeague").value===league.id?" active":"");
-    const logo=league.id && window.KARUBET_LEAGUE_CREST?.(league.id);
-    button.innerHTML=(logo?'<img loading="lazy" src="'+escapeHTML(logo)+'" alt="">':"")+
-      '<span>'+escapeHTML(league.name)+'</span>';
-    button.title=league.name;
+    const count=league.id?active.filter(m=>String(m.league_code)===league.id).length:active.length;
+    const logo=league.id&&window.KARUBET_LEAGUE_CREST?.(league.id);
+    const fallback=league.id==="110"?"BL":league.id==="125"?"CL":"⚽";
+    const icon=league.id?'<span class="league-chip-icon">'+
+      '<span class="league-chip-icon-fallback">'+escapeHTML(fallback)+'</span>'+
+      (logo?'<img loading="lazy" src="'+escapeHTML(logo)+'" alt="">':"")+
+      '</span>':"";
+    button.innerHTML=icon+'<span>'+escapeHTML(league.name)+'</span>';
+    button.title=league.name+" · "+count+" partidos prematch";
+    if(league.id&&!count)button.classList.add("empty-league");
+    button.querySelector(".league-chip-icon img")?.addEventListener("error",event=>event.currentTarget.remove());
     button.addEventListener("click",()=>{
       $("marketLeague").value=league.id;
-      renderMarketLeagueChips();renderMarketSuggestions();renderMarkets();
+      renderMarketLeagueChips();renderMarketSuggestions();syncMarketSelectionToFilter();
     });
     target.appendChild(button);
   }
@@ -394,6 +410,7 @@ function renderMarketSuggestions(){
   const input=normalizeClub($("marketSearch").value);
   const items=new Set();
   for(const m of state.markets){
+    if(!isUpcomingMarket(m))continue;
     if(league&&String(m.league_code)!==league)continue;
     for(const name of [m.home_team,m.away_team])
       if(!input||normalizeClub(name).includes(input))items.add(name);
@@ -410,7 +427,7 @@ function renderMarkets() {
   $("marketCount").textContent=items.length+" de "+state.markets.length+" mercados · "+(
     state.markets.length?"Filtra por liga o escribe un equipo":"sin capturas");
   if(!items.length){
-    container.innerHTML='<div class="empty">No hay mercados con esta búsqueda. Prueba otra liga o equipo.</div>';
+    container.innerHTML='<div class="empty">Sin partidos prematch por comenzar con estos filtros. Los partidos iniciados se ocultan, pero conservamos sus cuotas históricas.</div>';
     return;
   }
   const fragment=document.createDocumentFragment();
@@ -432,6 +449,7 @@ function renderMarkets() {
   container.append(fragment);
 }
 async function selectMarket(m) {
+  if(!isUpcomingMarket(m)){hideStartedMarkets();return;}
   state.selectedMarket = m;
   state.history = [];
   renderMarkets();
@@ -455,6 +473,32 @@ async function selectMarket(m) {
   } catch (e) {
     $("chartArea").innerHTML = '<div class="empty">' + escapeHTML(e.message) + '</div>';
   }
+}
+function clearMarketDetails(){
+  $("marketName").textContent="Sin partidos prematch seleccionados";
+  $("marketMeta").textContent="Solo próximos encuentros · Zona horaria Perú";
+  $("capturedAt").textContent="—";
+  for(const id of ["quoteL","quoteE","quoteV"])$(id).textContent="—";
+  $("chartArea").innerHTML='<div class="empty">No hay cuotas de partidos por comenzar con el filtro elegido.</div>';
+  $("decision").innerHTML='<span class="signal-tag">SIN MERCADO ACTIVO</span><p>Los partidos iniciados se retiran del panel prematch.</p>';
+  $("rollingStats").innerHTML='<div><small>MÁXIMO</small><strong>—</strong></div>'+
+    '<div><small>MÍNIMO</small><strong>—</strong></div>'+
+    '<div><small>Δ ÚLTIMO</small><strong>—</strong></div>'+
+    '<div><small>VOLATILIDAD</small><strong>—</strong></div>';
+  $("crosshairReadout").textContent="Sin serie seleccionada";
+}
+function syncMarketSelectionToFilter(){
+  const valid=marketFiltered();
+  if(valid.includes(state.selectedMarket))renderMarkets();
+  else if(valid.length)selectMarket(valid[0]);
+  else{state.selectedMarket=null;state.history=[];clearMarketDetails();renderMarkets();}
+}
+function hideStartedMarkets(){
+  const remaining=state.markets.filter(m=>isUpcomingMarket(m));
+  if(remaining.length===state.markets.length)return;
+  state.markets=remaining;
+  $("marketMatches").textContent=remaining.length;
+  renderMarketLeagueChips();renderMarketSuggestions();syncMarketSelectionToFilter();
 }
 function rolling(data, windowSize) {
   return data.map((_, i) => {
@@ -570,6 +614,12 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(()=>{
     if(!document.hidden && !$("marketPage").hidden) loadMarkets();
   },120000);
+  setInterval(()=>{
+    if(!document.hidden&&!$("marketPage").hidden)hideStartedMarkets();
+  },15000);
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden&&!$("marketPage").hidden)hideStartedMarkets();
+  });
   $("loadMore").addEventListener("click",()=>loadFixtures(false).catch(e=>{alert(e.message);}));
   $("daysSelect").addEventListener("change",()=>loadFixtures(true).catch(e=>alert(e.message)));
   $("matchSearch").addEventListener("input",renderFixtures);
@@ -591,8 +641,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setTab("market");
   renderMarketSuggestions();
   loadMarkets();
-  $("marketLeague").addEventListener("change",()=>{renderMarketLeagueChips();renderMarketSuggestions();renderMarkets();});
-  $("marketSearch").addEventListener("input",()=>{renderMarketSuggestions();renderMarkets();});
+  $("marketLeague").addEventListener("change",()=>{renderMarketLeagueChips();renderMarketSuggestions();syncMarketSelectionToFilter();});
+  $("marketSearch").addEventListener("input",()=>{renderMarketSuggestions();syncMarketSelectionToFilter();});
   document.addEventListener("error",event=>{
     if(event.target instanceof HTMLImageElement && event.target.closest(".team-crest,.terminal-hero-crest"))
       event.target.replaceWith(document.createTextNode("⚽"));
