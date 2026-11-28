@@ -2,7 +2,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
 const src=fs.readFileSync(new URL("../app.js", import.meta.url),"utf8");
-const ctx=vm.createContext({document:{addEventListener(){}},window:{}});
+const ctx=vm.createContext({document:{addEventListener(){}},window:{addEventListener(){}}});
 vm.runInContext(src+"\nglobalThis.MARKET_TEST={isUpcomingMarket,leagues:MARKET_LEAGUES,mapping:LEAGUES};",ctx);
 const {isUpcomingMarket,leagues,mapping}=ctx.MARKET_TEST;
 const t=Date.parse("2026-11-27T18:00:00Z");
